@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-09-15)
 
 **Core value:** Empower market surveillance analysts with immediate, explainable, and statistically grounded intelligence on what is abnormal about a stock right now, how abnormal it is, and why it was flagged — without black-box opacity or unsubstantiated claims of manipulation.  
-**Current focus:** Phase 1: Project Scaffolding & Universe Specification
+**Current focus:** Phase 1: Project Scaffolding & NIFTY 100 Specification
 
 ## Current Position
 
-Phase: 1 of 12 (Project Scaffolding & Universe Specification)  
+Phase: 1 of 12 (Project Scaffolding & NIFTY 100 Specification)  
 Plan: 0 of 1 in current phase  
 Status: Ready to plan  
-Last activity: 2026-09-15 — Project initialized via unified flow (questioning, research, requirements, roadmap)  
+Last activity: 2026-09-15 — Roadmap revised with NIFTY 100 sole MVP universe, offline curated Parquet truth, transparent scoring, and regulatory-oriented framing.  
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -42,12 +42,14 @@ Progress: [░░░░░░░░░░] 0%
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
-- [Init]: Use 5-minute candles for replay demo to balance computational efficiency and visualization clarity.
-- [Init]: Implement Time-of-Day (TOD) slot-bucketed baselines to eliminate market open/close diurnal U-curve false alarms.
-- [Init]: Use 100-stock diversified universe with matched market and sector benchmarks in external config.
-- [Init]: Offline-first curated Parquet architecture eliminates venue Wi-Fi and API rate-limiting failure modes.
-- [Init]: Dedicated Surveillance Controller in dashboard for deterministic raw candle anomaly injection.
-- [Init]: Vertical MVP project structure delivers end-to-end user capability slice-by-slice.
+- [Init]: NIFTY 100 is the sole MVP universe with Nifty 50 (`^NSEI`) and sector benchmarks; US100 deferred to v2 via config.
+- [Init]: Locally curated Parquet is the runtime source of truth; `yfinance` is strictly an offline pre-fetch tool.
+- [Init]: 5-minute candles across 75 daily slots (09:15 to 15:30 IST) for Indian market hours.
+- [Init]: Time-of-Day (TOD) 75-slot baselines eliminate 09:15 AM open and 15:25 PM close diurnal U-curve false alarms.
+- [Init]: Pure headless core engine in `marketwatch/`; Streamlit and FastAPI are decoupled consumer layers.
+- [Init]: Documented, mathematically transparent 0–100 risk scoring with justifiable saturation curves.
+- [Init]: Regulatory-oriented surveillance alert text with mandatory non-manipulation disclaimer.
+- [Init]: Dedicated Surveillance Controller injecting raw candles before feature extraction; tagged SIMULATED / INJECTED.
 
 ### Pending Todos
 
@@ -63,6 +65,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-09-15 00:48 IST
-Stopped at: Project initialization complete; ready to plan Phase 1.
+Last session: 2026-09-15 00:55 IST
+Stopped at: Roadmap revised and finalized; awaiting user confirmation.
 Resume file: None
