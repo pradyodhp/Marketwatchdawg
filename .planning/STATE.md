@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-09-15)
 Phase: 1 of 12 (Project Scaffolding & NIFTY 100 Specification)  
 Plan: 0 of 1 in current phase  
 Status: Ready to plan  
-Last activity: 2026-09-15 — Roadmap revised with NIFTY 100 sole MVP universe, offline curated Parquet truth, transparent scoring, and regulatory-oriented framing.  
+Last activity: 2026-09-15 — Final roadmap refinements applied: data robustness, temporal validation tests, baseline anti-contamination, explainability latency relaxation, data quality visibility, and production evolution backlog.  
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -27,7 +27,7 @@ Progress: [░░░░░░░░░░] 0%
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1. Scaffolding & Universe | 0/1 | - | - |
+| 1. Scaffolding & NIFTY 100 | 0/1 | - | - |
 
 **Recent Trend:**
 - Last 5 plans: -
@@ -43,13 +43,16 @@ Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
 - [Init]: NIFTY 100 is the sole MVP universe with Nifty 50 (`^NSEI`) and sector benchmarks; US100 deferred to v2 via config.
-- [Init]: Locally curated Parquet is the runtime source of truth; `yfinance` is strictly an offline pre-fetch tool.
+- [Init]: Locally curated Parquet is the runtime source of truth; `yfinance` is strictly an offline pre-fetch tool. Real data policy (never fabricate).
+- [Init]: Dataset quality and coverage metadata exposed to API and Dashboard with OFFLINE PARQUET confirmation.
 - [Init]: 5-minute candles across 75 daily slots (09:15 to 15:30 IST) for Indian market hours.
-- [Init]: Time-of-Day (TOD) 75-slot baselines eliminate 09:15 AM open and 15:25 PM close diurnal U-curve false alarms.
+- [Init]: Time-of-Day (TOD) 75-slot baselines with anti-contamination protection against anomaly distortion.
+- [Init]: Strict temporal separation between pre-replay calibration data and replay evaluation data, with automated leakage tests.
 - [Init]: Pure headless core engine in `marketwatch/`; Streamlit and FastAPI are decoupled consumer layers.
 - [Init]: Documented, mathematically transparent 0–100 risk scoring with justifiable saturation curves.
-- [Init]: Regulatory-oriented surveillance alert text with mandatory non-manipulation disclaimer.
-- [Init]: Dedicated Surveillance Controller injecting raw candles before feature extraction; tagged SIMULATED / INJECTED.
+- [Init]: Regulatory-oriented surveillance alert text with mandatory non-manipulation disclaimer; removed hard <0.1ms constraint.
+- [Init]: Dedicated Surveillance Controller injecting raw candles before feature extraction; SIMULATED flag never bypasses scoring.
+- [Init]: Comprehensive 10-area Production Evolution Backlog cleanly separated from MVP.
 
 ### Pending Todos
 
@@ -65,6 +68,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-09-15 00:55 IST
-Stopped at: Roadmap revised and finalized; awaiting user confirmation.
+Last session: 2026-09-15 01:03 IST
+Stopped at: Final roadmap refinements complete; ready to plan Phase 1.
 Resume file: None
