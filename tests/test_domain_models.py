@@ -2,9 +2,11 @@
 
 from datetime import datetime
 from zoneinfo import ZoneInfo
+
 import pytest
 from pydantic import ValidationError
-from marketwatch.models.alerts import Alert, AlertSeverity, DEFAULT_DISCLAIMER
+
+from marketwatch.models.alerts import DEFAULT_DISCLAIMER, Alert, AlertSeverity
 from marketwatch.models.candle import Candle, CandleBatch, compute_slot_index
 from marketwatch.models.features import FeatureSet
 from marketwatch.models.metadata import DataQualityMetadata

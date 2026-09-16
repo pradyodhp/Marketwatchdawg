@@ -21,12 +21,12 @@ sys.path.insert(0, str(REPO_ROOT / "src"))
 
 from marketwatch.config.universe import load_universe_config
 from marketwatch.ingestion.fetcher import fetch_universe
-from marketwatch.ingestion.validator import validate_ohlcv
 from marketwatch.ingestion.parquet_store import (
     DEFAULT_CURATED_DIR,
-    write_symbol_parquet,
     write_quality_metadata,
+    write_symbol_parquet,
 )
+from marketwatch.ingestion.validator import validate_ohlcv
 
 logging.basicConfig(
     level=logging.INFO,

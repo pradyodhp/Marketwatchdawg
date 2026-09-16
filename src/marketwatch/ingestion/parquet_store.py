@@ -20,7 +20,6 @@ import json
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
 
 import pandas as pd
 import pyarrow as pa
@@ -84,7 +83,7 @@ def write_symbol_parquet(
 def read_symbol_parquet(
     symbol: str,
     curated_dir: Path = DEFAULT_CURATED_DIR,
-) -> Optional[pd.DataFrame]:
+) -> pd.DataFrame | None:
     """Read a single symbol's Parquet file.  Returns None if file not found.
 
     Args:
@@ -136,7 +135,7 @@ def write_quality_metadata(
     return out_path
 
 
-def read_quality_metadata(curated_dir: Path = DEFAULT_CURATED_DIR) -> Optional[dict]:
+def read_quality_metadata(curated_dir: Path = DEFAULT_CURATED_DIR) -> dict | None:
     """Read quality_metadata.json; return None if not found."""
     p = curated_dir / "quality_metadata.json"
     if not p.exists():

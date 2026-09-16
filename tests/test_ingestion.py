@@ -38,7 +38,7 @@ class TestValidator:
     def test_valid_rows_pass(self):
         from marketwatch.ingestion.validator import validate_ohlcv
         df = _make_df([_valid_row(T0), _valid_row(T1), _valid_row(T2)])
-        clean, result = validate_ohlcv("TEST.NS", df)
+        _clean, result = validate_ohlcv("TEST.NS", df)
         assert result.valid_rows == 3
         assert result.dropped_rows == 0
 
@@ -46,7 +46,7 @@ class TestValidator:
         from marketwatch.ingestion.validator import validate_ohlcv
         bad = _valid_row(T0, open_=-1.0)  # negative open
         df = _make_df([bad, _valid_row(T1)])
-        clean, result = validate_ohlcv("TEST.NS", df)
+        _clean, result = validate_ohlcv("TEST.NS", df)
         assert result.valid_rows == 1
         assert "non_positive_price" in result.invalid_reasons
 
@@ -54,7 +54,7 @@ class TestValidator:
         from marketwatch.ingestion.validator import validate_ohlcv
         bad = _valid_row(T0, open_=0.0)
         df = _make_df([bad, _valid_row(T1)])
-        clean, result = validate_ohlcv("TEST.NS", df)
+        _clean, result = validate_ohlcv("TEST.NS", df)
         assert result.valid_rows == 1
 
     def test_high_lt_low_dropped(self):
@@ -62,7 +62,7 @@ class TestValidator:
         # high < low is geometrically invalid
         bad = _valid_row(T0, high=98.0, low=101.0)
         df = _make_df([bad, _valid_row(T1)])
-        clean, result = validate_ohlcv("TEST.NS", df)
+        _clean, result = validate_ohlcv("TEST.NS", df)
         assert result.valid_rows == 1
         assert "high_lt_low" in result.invalid_reasons
 
@@ -71,14 +71,14 @@ class TestValidator:
         # 08:00 IST is before market open
         t_early = datetime(2024, 1, 15, 8, 0, tzinfo=IST)
         df = _make_df([_valid_row(t_early), _valid_row(T0)])
-        clean, result = validate_ohlcv("TEST.NS", df)
+        _clean, result = validate_ohlcv("TEST.NS", df)
         assert result.valid_rows == 1
         assert result.out_of_hours_rows == 1
 
     def test_duplicate_timestamps_deduplicated(self):
         from marketwatch.ingestion.validator import validate_ohlcv
         df = _make_df([_valid_row(T0), _valid_row(T0)])  # duplicate
-        clean, result = validate_ohlcv("TEST.NS", df)
+        _clean, result = validate_ohlcv("TEST.NS", df)
         assert result.valid_rows == 1
         assert result.duplicate_timestamps == 1
 
@@ -86,14 +86,14 @@ class TestValidator:
         from marketwatch.ingestion.validator import validate_ohlcv
         df = pd.DataFrame(columns=["Open", "High", "Low", "Close", "Volume"])
         df.index = pd.DatetimeIndex([], name="Datetime")
-        clean, result = validate_ohlcv("TEST.NS", df)
+        _clean, result = validate_ohlcv("TEST.NS", df)
         assert result.valid_rows == 0
 
     def test_negative_volume_dropped(self):
         from marketwatch.ingestion.validator import validate_ohlcv
         bad = _valid_row(T0, vol=-100.0)
         df = _make_df([bad, _valid_row(T1)])
-        clean, result = validate_ohlcv("TEST.NS", df)
+        _clean, result = validate_ohlcv("TEST.NS", df)
         assert result.valid_rows == 1
         assert "negative_volume" in result.invalid_reasons
 
@@ -102,7 +102,7 @@ class TestValidator:
         # zero volume is valid (halted ticks) — kept
         zero_vol = _valid_row(T0, vol=0.0)
         df = _make_df([zero_vol, _valid_row(T1)])
-        clean, result = validate_ohlcv("TEST.NS", df)
+        _clean, result = validate_ohlcv("TEST.NS", df)
         assert result.valid_rows == 2
         assert result.zero_volume_rows == 1
 
@@ -110,7 +110,7 @@ class TestValidator:
         from marketwatch.ingestion.validator import validate_ohlcv
         t_day2 = datetime(2024, 1, 16, 9, 15, tzinfo=IST)
         df = _make_df([_valid_row(T0), _valid_row(T1), _valid_row(t_day2)])
-        clean, result = validate_ohlcv("TEST.NS", df)
+        _clean, result = validate_ohlcv("TEST.NS", df)
         assert result.trading_days == 2
 
     def test_ist_normalization(self):
@@ -118,7 +118,7 @@ class TestValidator:
         # Supply UTC timestamps — should be converted to IST (09:15 IST = 03:45 UTC)
         t_utc = datetime(2024, 1, 15, 3, 45, tzinfo=ZoneInfo("UTC"))
         df = _make_df([_valid_row(t_utc)], tz="UTC")
-        clean, result = validate_ohlcv("TEST.NS", df)
+        _clean, result = validate_ohlcv("TEST.NS", df)
         # 03:45 UTC = 09:15 IST → valid slot 0
         assert result.valid_rows == 1
 
@@ -127,7 +127,10 @@ class TestValidator:
 
 class TestParquetStore:
     def test_write_and_read_roundtrip(self, tmp_path):
-        from marketwatch.ingestion.parquet_store import write_symbol_parquet, read_symbol_parquet
+        from marketwatch.ingestion.parquet_store import (
+            read_symbol_parquet,
+            write_symbol_parquet,
+        )
         df = _make_df([_valid_row(T0), _valid_row(T1), _valid_row(T2)])
         write_symbol_parquet("HDFC.NS", df, curated_dir=tmp_path)
         result = read_symbol_parquet("HDFC.NS", curated_dir=tmp_path)
@@ -141,7 +144,10 @@ class TestParquetStore:
         assert result is None
 
     def test_parquet_index_is_ist(self, tmp_path):
-        from marketwatch.ingestion.parquet_store import write_symbol_parquet, read_symbol_parquet
+        from marketwatch.ingestion.parquet_store import (
+            read_symbol_parquet,
+            write_symbol_parquet,
+        )
         df = _make_df([_valid_row(T0)])
         write_symbol_parquet("TEST.NS", df, curated_dir=tmp_path)
         result = read_symbol_parquet("TEST.NS", curated_dir=tmp_path)
@@ -149,7 +155,10 @@ class TestParquetStore:
         assert str(result.index.tz) == "Asia/Kolkata"
 
     def test_quality_metadata_roundtrip(self, tmp_path):
-        from marketwatch.ingestion.parquet_store import write_quality_metadata, read_quality_metadata
+        from marketwatch.ingestion.parquet_store import (
+            read_quality_metadata,
+            write_quality_metadata,
+        )
         meta = {"loaded_symbols": ["A.NS", "B.NS"], "coverage_pct": 98.5}
         write_quality_metadata(meta, curated_dir=tmp_path)
         result = read_quality_metadata(curated_dir=tmp_path)
@@ -170,7 +179,10 @@ class TestParquetStore:
         assert "_CARET_" in path.name
 
     def test_parquet_values_float64(self, tmp_path):
-        from marketwatch.ingestion.parquet_store import write_symbol_parquet, read_symbol_parquet
+        from marketwatch.ingestion.parquet_store import (
+            read_symbol_parquet,
+            write_symbol_parquet,
+        )
         df = _make_df([_valid_row(T0, open_=1234.5678)])
         write_symbol_parquet("TEST.NS", df, curated_dir=tmp_path)
         result = read_symbol_parquet("TEST.NS", curated_dir=tmp_path)

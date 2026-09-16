@@ -22,9 +22,12 @@ def _make_df(*timestamps, open_=100.0, high=102.0, low=99.0, close=101.0, vol=50
     return pd.DataFrame(rows, index=idx)
 
 
-def _seed_provider(tmp_path, symbol_data: dict, metadata: dict = None):
+def _seed_provider(tmp_path, symbol_data: dict, metadata: dict | None = None):
     """Write Parquet files + optional metadata, return ParquetDataProvider."""
-    from marketwatch.ingestion.parquet_store import write_symbol_parquet, write_quality_metadata
+    from marketwatch.ingestion.parquet_store import (
+        write_quality_metadata,
+        write_symbol_parquet,
+    )
     from marketwatch.providers.parquet_provider import ParquetDataProvider
 
     for symbol, df in symbol_data.items():

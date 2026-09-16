@@ -2,6 +2,7 @@
 
 import pytest
 from pydantic import ValidationError
+
 from marketwatch.config.settings import load_settings
 from marketwatch.config.universe import (
     UniverseConfig,

@@ -8,7 +8,6 @@ from __future__ import annotations
 import logging
 import time
 from dataclasses import dataclass, field
-from typing import Optional
 
 import pandas as pd
 
@@ -40,8 +39,8 @@ class FetchResult:
 
     symbol: str
     success: bool
-    df: Optional[pd.DataFrame] = None   # Raw OHLCV DataFrame, None on failure
-    error: Optional[str] = None
+    df: pd.DataFrame | None = None   # Raw OHLCV DataFrame, None on failure
+    error: str | None = None
     row_count: int = 0
     date_range: tuple[str, str] = field(default=("", ""))
 
@@ -93,7 +92,7 @@ def fetch_symbol(symbol: str, *, period: str = FETCH_PERIOD, interval: str = FET
                         date_range=(ts_min, ts_max),
                     )
 
-        except Exception as exc:
+        except (AttributeError, TypeError, ValueError, RuntimeError) as exc:
             last_error = str(exc)
             logger.warning("[%s] Attempt %d failed: %s", symbol, attempt, last_error)
 
