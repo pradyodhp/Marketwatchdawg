@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-09-15)
 
 ## Current Position
 
-Phase: 3 of 12 (Deterministic Replay Engine & Stream Architecture) Complete
-Plan: 1 of 1 in Phase 3 complete (03-01)
-Status: Phase 3 Complete (Ready for Phase 4)
-Last activity: 2026-09-16 — Phase 3 executed: ReplayClock, ReplayEngine with play/pause/resume/step/speed, zero lookahead history, deterministic reset, ParquetDataProvider integration.
+Phase: 5 of 12 (Statistical Anomaly Detector (Z-Scores & EWMA)) Complete
+Plan: 1 of 1 in Phase 5 complete (05-01)
+Status: Phase 5 Complete (Ready for Phase 6)
+Last activity: 2026-09-17 — Phase 5 executed: rolling z-score detector, EWMA detector, and structured anomaly output contract with explicit anti-leakage safeguards.
 
-Progress: [███░░░░░░░] 25%
+Progress: [█████░░░░░] 42%
 
 ## Performance Metrics
 

@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+import math
 from datetime import datetime
 from enum import Enum
 from typing import Any
 from zoneinfo import ZoneInfo
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 IST = ZoneInfo("Asia/Kolkata")
 
@@ -32,10 +33,17 @@ class AnomalySignal(BaseModel):
     slot_index: int = Field(ge=0, le=74)
     feature_name: str
     value: float
-    baseline_mean: float
-    baseline_std: float
-    z_score: float
-    severity: AnomalySeverity
+    baseline_value: float = 0.0
+    baseline_mean: float = 0.0
+    baseline_std: float = 1.0
+    statistic: float = 0.0
+    z_score: float = 0.0
+    threshold: float = 0.0
+    severity: AnomalySeverity = AnomalySeverity.LOW
+    anomaly: bool = False
+    direction: float = 0.0
+    is_valid: bool = True
+    reason: str | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
 
     @field_validator("timestamp")
@@ -44,3 +52,20 @@ class AnomalySignal(BaseModel):
         if v.tzinfo is None:
             return v.replace(tzinfo=IST)
         return v.astimezone(IST)
+
+    @model_validator(mode="after")
+    def validate_numeric_finiteness(self) -> AnomalySignal:
+        """Ensure signal fields remain finite and deterministic."""
+        for field_name in [
+            "value",
+            "baseline_value",
+            "baseline_mean",
+            "baseline_std",
+            "statistic",
+            "z_score",
+            "threshold",
+            "direction",
+        ]:
+            if not math.isfinite(getattr(self, field_name)):
+                raise ValueError(f"Signal field '{field_name}' must be finite")
+        return self
