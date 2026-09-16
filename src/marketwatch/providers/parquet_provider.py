@@ -6,9 +6,9 @@ Zero runtime network dependency.  Never fabricates or silently substitutes data.
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterator
 from datetime import date, datetime
 from pathlib import Path
-from typing import Iterator, Optional
 from zoneinfo import ZoneInfo
 
 import pandas as pd
@@ -42,7 +42,7 @@ class ParquetDataProvider:
 
     def __init__(self, curated_dir: Path = DEFAULT_CURATED_DIR) -> None:
         self._dir = Path(curated_dir)
-        self._raw_meta: Optional[dict] = read_quality_metadata(self._dir)
+        self._raw_meta: dict | None = read_quality_metadata(self._dir)
         self._loaded_dfs: dict[str, pd.DataFrame] = {}
 
     # ── Protocol: get_symbols ─────────────────────────────────────────────────
@@ -107,8 +107,8 @@ class ParquetDataProvider:
     def get_candles(
         self,
         symbol: str,
-        start: Optional[date] = None,
-        end: Optional[date] = None,
+        start: date | None = None,
+        end: date | None = None,
     ) -> Iterator[Candle]:
         """Yield Candle objects for a symbol, optionally filtered by date range.
 
@@ -137,16 +137,16 @@ class ParquetDataProvider:
                     close=float(row["close"]),
                     volume=float(row["volume"]),
                 )
-            except Exception as exc:
+            except (AttributeError, KeyError, TypeError, ValueError) as exc:
                 logger.debug("[%s] Skipping invalid candle at %s: %s", symbol, ts, exc)
 
     # ── Protocol: stream_batches ─────────────────────────────────────────────
 
     def stream_batches(
         self,
-        symbols: Optional[list[str]] = None,
-        start: Optional[date] = None,
-        end: Optional[date] = None,
+        symbols: list[str] | None = None,
+        start: date | None = None,
+        end: date | None = None,
     ) -> Iterator[CandleBatch]:
         """Yield synchronized CandleBatch objects across all symbols by timestamp.
 
@@ -176,7 +176,7 @@ class ParquetDataProvider:
 
     # ── Convenience (non-protocol) ────────────────────────────────────────────
 
-    def get_symbol_date_range(self, symbol: str) -> tuple[Optional[date], Optional[date]]:
+    def get_symbol_date_range(self, symbol: str) -> tuple[date | None, date | None]:
         """Return (earliest_date, latest_date) for a specific symbol."""
         df = self._load_df(symbol)
         if df is None or df.empty:
@@ -188,7 +188,7 @@ class ParquetDataProvider:
 
     # ── Internal ──────────────────────────────────────────────────────────────
 
-    def _load_df(self, symbol: str) -> Optional[pd.DataFrame]:
+    def _load_df(self, symbol: str) -> pd.DataFrame | None:
         if symbol not in self._loaded_dfs:
             df = read_symbol_parquet(symbol, self._dir)
             if df is None:

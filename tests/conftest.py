@@ -2,7 +2,9 @@
 
 from datetime import datetime
 from zoneinfo import ZoneInfo
+
 import pytest
+
 from marketwatch.models.candle import Candle, CandleBatch
 
 IST = ZoneInfo("Asia/Kolkata")

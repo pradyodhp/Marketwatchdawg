@@ -367,9 +367,10 @@ class TestReplayWithParquetProvider:
     def _make_provider(self, tmp_path):
         """Create a mini ParquetDataProvider with synthetic data."""
         import pandas as pd
+
         from marketwatch.ingestion.parquet_store import (
-            write_symbol_parquet,
             write_quality_metadata,
+            write_symbol_parquet,
         )
         from marketwatch.providers.parquet_provider import ParquetDataProvider
 

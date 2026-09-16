@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Iterator
 from datetime import date, datetime
-from typing import Iterator
 from zoneinfo import ZoneInfo
+
 from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 
 IST = ZoneInfo("Asia/Kolkata")
@@ -146,7 +147,7 @@ class CandleBatch(BaseModel):
     @property
     def active_symbols(self) -> list[str]:
         """List of active symbols present in this candle batch."""
-        return sorted(list(self.candles.keys()))
+        return sorted(self.candles.keys())
 
     def __getitem__(self, symbol: str) -> Candle:
         return self.candles[symbol]

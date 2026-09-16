@@ -7,7 +7,6 @@ and provides temporal boundary information.
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import Optional
 from zoneinfo import ZoneInfo
 
 IST = ZoneInfo("Asia/Kolkata")
@@ -62,7 +61,7 @@ class ReplayClock:
         return len(self._timestamps)
 
     @property
-    def current_timestamp(self) -> Optional[datetime]:
+    def current_timestamp(self) -> datetime | None:
         """Current timestamp, or None if before start or past end."""
         if 0 <= self._position < len(self._timestamps):
             return self._timestamps[self._position]
@@ -104,12 +103,12 @@ class ReplayClock:
         return self._timestamps[-1]
 
     @property
-    def current_trading_date(self) -> Optional[date]:
+    def current_trading_date(self) -> date | None:
         """Trading date (IST) of the current timestamp."""
         ts = self.current_timestamp
         return ts.astimezone(IST).date() if ts else None
 
-    def advance(self) -> Optional[datetime]:
+    def advance(self) -> datetime | None:
         """Advance the clock by one step.  Returns the new timestamp or None if exhausted."""
         if self._position >= len(self._timestamps) - 1:
             return None

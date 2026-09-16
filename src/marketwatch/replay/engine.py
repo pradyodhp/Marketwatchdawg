@@ -16,8 +16,8 @@ from __future__ import annotations
 import enum
 import logging
 import time
+from collections.abc import Iterator
 from datetime import date
-from typing import Iterator, Optional
 
 from marketwatch.models.candle import CandleBatch
 from marketwatch.replay.clock import ReplayClock
@@ -81,9 +81,9 @@ class ReplayEngine:
     def from_provider(
         cls,
         provider: object,
-        symbols: Optional[list[str]] = None,
-        start: Optional[date] = None,
-        end: Optional[date] = None,
+        symbols: list[str] | None = None,
+        start: date | None = None,
+        end: date | None = None,
     ) -> ReplayEngine:
         """Create a ReplayEngine from a data provider.
 
@@ -133,7 +133,7 @@ class ReplayEngine:
         self._speed = value
 
     @property
-    def current_batch(self) -> Optional[CandleBatch]:
+    def current_batch(self) -> CandleBatch | None:
         """Current CandleBatch, or None if not yet started."""
         pos = self._clock.position
         if 0 <= pos < len(self._batches):
@@ -160,7 +160,7 @@ class ReplayEngine:
 
     # ── Playback controls ─────────────────────────────────────────────────────
 
-    def step_forward(self) -> Optional[CandleBatch]:
+    def step_forward(self) -> CandleBatch | None:
         """Advance the replay by exactly one 5-minute bar.
 
         Returns:
@@ -176,7 +176,7 @@ class ReplayEngine:
         self._state = PlaybackState.PLAYING
         return batch
 
-    def play(self, speed: Optional[float] = None) -> Iterator[CandleBatch]:
+    def play(self, speed: float | None = None) -> Iterator[CandleBatch]:
         """Continuous replay generator yielding batches with throttle delay.
 
         Args:
