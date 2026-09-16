@@ -13,8 +13,8 @@ MarketWatch AI is an explainable, real-time market surveillance and behavioral a
 - [x] **Phase 1: Project Scaffolding & NIFTY 100 Specification** - Establish headless domain models, provider-agnostic interfaces, and declarative NIFTY 100 universe configuration.
 - [x] **Phase 2: Free Data Ingestion & Curated Parquet Pipeline** - Pre-fetch 60 days of 5m candles for NIFTY 100 via yfinance without data fabrication, reporting coverage and establishing offline Parquet as the sole runtime truth.
 - [x] **Phase 3: Deterministic Replay Engine & Stream Architecture** - Implement synchronized 5m candle replay across 100 stocks (75 bars/day, 09:15-15:30 IST) with strict temporal causal boundaries.
-- [ ] **Phase 4: Feature Engineering & Time-of-Day (TOD) Baselines** - Build scale-invariant relative features, 75-slot diurnal baselines, and baseline anti-contamination protection.
-- [ ] **Phase 5: Statistical Anomaly Detector (Z-Scores & EWMA)** - Implement multi-metric rolling z-score and EWMA shock detectors producing structured deviation signals.
+- [x] **Phase 4: Feature Engineering & Time-of-Day (TOD) Baselines** - Build scale-invariant relative features, 75-slot diurnal baselines, and baseline anti-contamination protection.
+- [x] **Phase 5: Statistical Anomaly Detector (Z-Scores & EWMA)** - Implement multi-metric rolling z-score and EWMA shock detectors producing structured deviation signals.
 - [ ] **Phase 6: Multivariate Isolation Forest Detector & Temporal Validation** - Train scikit-learn Isolation Forest strictly on pre-replay historical calibration data, verifying zero lookahead leakage with automated tests.
 - [ ] **Phase 7: Transparent 0–100 Risk Scoring & Signal Fusion** - Mathematically formulated, documented scoring engine combining statistical, ML, and market context signals with saturation curves.
 - [ ] **Phase 8: Regulatory-Oriented Surveillance Explainability** - Generate lightweight, deterministic evidence summaries citing exact feature deviations, sector context, and mandatory non-manipulation disclaimers.
@@ -82,7 +82,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 04-01: Scale-invariant feature pipeline, 75-slot TOD baseline engine, anti-contamination logic, and diurnal calibration tests.
+- [x] 04-01: Scale-invariant feature pipeline, 75-slot TOD baseline engine, anti-contamination logic, and diurnal calibration tests.
 
 ### Phase 5: Statistical Anomaly Detector (Z-Scores & EWMA)
 **Goal**: Implement statistical anomaly detection calculating rolling z-scores and EWMA deviations per feature against TOD baselines, outputting structured deviation signals with magnitude, ratio, and severity.  
@@ -96,7 +96,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 05-01: Rolling Z-score and EWMA statistical detector implementations with structured signal schemas.
+- [x] 05-01: Rolling Z-score and EWMA statistical detector implementations with structured signal schemas.
 
 ### Phase 6: Multivariate Isolation Forest Detector & Temporal Validation
 **Goal**: Implement scikit-learn `IsolationForest` pipeline trained exclusively on scale-invariant relative features from a pre-replay historical calibration window, persisting model artifacts, scoring non-linear compound deviations in real time, and verifying zero temporal leakage with automated tests.  
@@ -211,8 +211,8 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 1. Project Scaffolding & NIFTY 100 Specification | mvp | 1/1 | Complete | 2026-09-15 |
 | 2. Free Data Ingestion & Curated Parquet Pipeline | mvp | 1/1 | Complete | 2026-09-16 |
 | 3. Deterministic Replay Engine & Stream Architecture | mvp | 1/1 | Complete | 2026-09-16 |
-| 4. Feature Engineering & Time-of-Day (TOD) Baselines | mvp | 0/1 | Not started | - |
-| 5. Statistical Anomaly Detector (Z-Scores & EWMA) | mvp | 0/1 | Not started | - |
+| 4. Feature Engineering & Time-of-Day (TOD) Baselines | mvp | 1/1 | Complete | 2026-09-16 |
+| 5. Statistical Anomaly Detector (Z-Scores & EWMA) | mvp | 1/1 | Complete | 2026-09-17 |
 | 6. Multivariate Isolation Forest Detector & Temporal Validation | mvp | 0/1 | Not started | - |
 | 7. Transparent 0–100 Risk Scoring & Signal Fusion | mvp | 0/1 | Not started | - |
 | 8. Regulatory-Oriented Surveillance Explainability | mvp | 0/1 | Not started | - |

@@ -1,4 +1,4 @@
-"""Engine package for MarketWatch AI."""
+"""Compatibility layer for detector imports."""
 
 from marketwatch.detectors import (
     EWMADetector,
@@ -6,13 +6,9 @@ from marketwatch.detectors import (
     detect_ewma_anomalies,
     detect_z_score_anomalies,
 )
-from marketwatch.features import BaselineStats, FeaturePipeline, TODBaselineEngine
 
 __all__ = [
-    "BaselineStats",
     "EWMADetector",
-    "FeaturePipeline",
-    "TODBaselineEngine",
     "ZScoreDetector",
     "detect_ewma_anomalies",
     "detect_z_score_anomalies",
