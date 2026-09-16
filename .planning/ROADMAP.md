@@ -10,7 +10,7 @@ MarketWatch AI is an explainable, real-time market surveillance and behavioral a
 - Integer phases (1, 2, 3...): Planned milestone work
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
-- [ ] **Phase 1: Project Scaffolding & NIFTY 100 Specification** - Establish headless domain models, provider-agnostic interfaces, and declarative NIFTY 100 universe configuration.
+- [x] **Phase 1: Project Scaffolding & NIFTY 100 Specification** - Establish headless domain models, provider-agnostic interfaces, and declarative NIFTY 100 universe configuration.
 - [ ] **Phase 2: Free Data Ingestion & Curated Parquet Pipeline** - Pre-fetch 60 days of 5m candles for NIFTY 100 via yfinance without data fabrication, reporting coverage and establishing offline Parquet as the sole runtime truth.
 - [ ] **Phase 3: Deterministic Replay Engine & Stream Architecture** - Implement synchronized 5m candle replay across 100 stocks (75 bars/day, 09:15-15:30 IST) with strict temporal causal boundaries.
 - [ ] **Phase 4: Feature Engineering & Time-of-Day (TOD) Baselines** - Build scale-invariant relative features, 75-slot diurnal baselines, and baseline anti-contamination protection.
@@ -39,7 +39,7 @@ MarketWatch AI is an explainable, real-time market surveillance and behavioral a
 **Plans**: 1 plan
 
 Plans:
-- [ ] 01-01: Scaffolding, dependencies, domain models, abstract protocols, and NIFTY 100 universe configs.
+- [x] 01-01: Scaffolding, dependencies, domain models, abstract protocols, and NIFTY 100 universe configs.
 
 ### Phase 2: Free Data Ingestion & Curated Parquet Pipeline
 **Goal**: Implement an offline data curation pipeline using `yfinance` to pre-fetch 60 days of 5-minute candles for the NIFTY 100 universe and benchmarks. Handle rate limits and missing symbols gracefully without fabricating data, generate data quality/coverage metadata, and save to partitioned Parquet files in `data/curated/` as the sole runtime source of truth.  
@@ -208,7 +208,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 
 | Phase | Mode | Plans Complete | Status | Completed |
 |-------|------|----------------|--------|-----------|
-| 1. Project Scaffolding & NIFTY 100 Specification | mvp | 0/1 | Not started | - |
+| 1. Project Scaffolding & NIFTY 100 Specification | mvp | 1/1 | Complete | 2026-09-15 |
 | 2. Free Data Ingestion & Curated Parquet Pipeline | mvp | 0/1 | Not started | - |
 | 3. Deterministic Replay Engine & Stream Architecture | mvp | 0/1 | Not started | - |
 | 4. Feature Engineering & Time-of-Day (TOD) Baselines | mvp | 0/1 | Not started | - |

@@ -1,0 +1,25 @@
+data_dir: data
+curated_dir: data/curated
+metadata_file: data/curated/quality_metadata.json
+universe_config_path: configs/universe_nifty100.json
+market:
+  timezone: Asia/Kolkata
+  slots_per_day: 75
+  bar_interval_minutes: 5
+risk_scoring:
+  weights:
+    stat_weight: 0.4
+    ml_weight: 0.35
+    context_weight: 0.25
+  thresholds:
+    low: 0.0
+    medium: 50.0
+    high: 70.0
+    critical: 85.0
+cooldown:
+  window_bars: 6
+replay:
+  default_speed: 1.0
+  auto_play: false
+logging:
+  level: INFO

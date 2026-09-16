@@ -1,0 +1,962 @@
+{
+  "universe_id": "nifty100",
+  "market": "NSE",
+  "market_hours": {
+    "open": "09:15",
+    "close": "15:30",
+    "timezone": "Asia/Kolkata",
+    "slots_per_day": 75,
+    "bar_interval_minutes": 5
+  },
+  "benchmarks": {
+    "broad": {
+      "symbol": "^NSEI",
+      "name": "NIFTY 50",
+      "provider_symbol": "^NSEI"
+    },
+    "sectors": {
+      "BANK": {
+        "symbol": "^NSEBANK",
+        "name": "Nifty Bank"
+      },
+      "IT": {
+        "symbol": "^CNXIT",
+        "name": "Nifty IT"
+      },
+      "AUTO": {
+        "symbol": "^CNXAUTO",
+        "name": "Nifty Auto"
+      },
+      "ENERGY": {
+        "symbol": "^CNXENERGY",
+        "name": "Nifty Energy"
+      },
+      "FMCG": {
+        "symbol": "^CNXFMCG",
+        "name": "Nifty FMCG"
+      },
+      "PHARMA": {
+        "symbol": "^CNXPHARMA",
+        "name": "Nifty Pharma"
+      },
+      "METAL": {
+        "symbol": "^CNXMETAL",
+        "name": "Nifty Metal"
+      },
+      "REALTY": {
+        "symbol": "^CNXREALTY",
+        "name": "Nifty Realty"
+      },
+      "INFRA": {
+        "symbol": "^CNXINFRA",
+        "name": "Nifty Infrastructure"
+      },
+      "FINSERVICE": {
+        "symbol": "^CNXFIN",
+        "name": "Nifty Financial Services"
+      }
+    }
+  },
+  "equities": [
+    {
+      "symbol": "HDFCBANK.NS",
+      "base_symbol": "HDFCBANK",
+      "name": "HDFC Bank Ltd",
+      "sector": "BANK",
+      "industry": "Private Bank",
+      "benchmark_symbol": "^NSEBANK",
+      "lot_size": 1
+    },
+    {
+      "symbol": "ICICIBANK.NS",
+      "base_symbol": "ICICIBANK",
+      "name": "ICICI Bank Ltd",
+      "sector": "BANK",
+      "industry": "Private Bank",
+      "benchmark_symbol": "^NSEBANK",
+      "lot_size": 1
+    },
+    {
+      "symbol": "SBIN.NS",
+      "base_symbol": "SBIN",
+      "name": "State Bank of India",
+      "sector": "BANK",
+      "industry": "Public Bank",
+      "benchmark_symbol": "^NSEBANK",
+      "lot_size": 1
+    },
+    {
+      "symbol": "KOTAKBANK.NS",
+      "base_symbol": "KOTAKBANK",
+      "name": "Kotak Mahindra Bank Ltd",
+      "sector": "BANK",
+      "industry": "Private Bank",
+      "benchmark_symbol": "^NSEBANK",
+      "lot_size": 1
+    },
+    {
+      "symbol": "AXISBANK.NS",
+      "base_symbol": "AXISBANK",
+      "name": "Axis Bank Ltd",
+      "sector": "BANK",
+      "industry": "Private Bank",
+      "benchmark_symbol": "^NSEBANK",
+      "lot_size": 1
+    },
+    {
+      "symbol": "INDUSINDBK.NS",
+      "base_symbol": "INDUSINDBK",
+      "name": "IndusInd Bank Ltd",
+      "sector": "BANK",
+      "industry": "Private Bank",
+      "benchmark_symbol": "^NSEBANK",
+      "lot_size": 1
+    },
+    {
+      "symbol": "BANKBARODA.NS",
+      "base_symbol": "BANKBARODA",
+      "name": "Bank of Baroda",
+      "sector": "BANK",
+      "industry": "Public Bank",
+      "benchmark_symbol": "^NSEBANK",
+      "lot_size": 1
+    },
+    {
+      "symbol": "PNB.NS",
+      "base_symbol": "PNB",
+      "name": "Punjab National Bank",
+      "sector": "BANK",
+      "industry": "Public Bank",
+      "benchmark_symbol": "^NSEBANK",
+      "lot_size": 1
+    },
+    {
+      "symbol": "CANBK.NS",
+      "base_symbol": "CANBK",
+      "name": "Canara Bank",
+      "sector": "BANK",
+      "industry": "Public Bank",
+      "benchmark_symbol": "^NSEBANK",
+      "lot_size": 1
+    },
+    {
+      "symbol": "BAJFINANCE.NS",
+      "base_symbol": "BAJFINANCE",
+      "name": "Bajaj Finance Ltd",
+      "sector": "FINSERVICE",
+      "industry": "NBFC",
+      "benchmark_symbol": "^CNXFIN",
+      "lot_size": 1
+    },
+    {
+      "symbol": "BAJAJFINSV.NS",
+      "base_symbol": "BAJAJFINSV",
+      "name": "Bajaj Finserv Ltd",
+      "sector": "FINSERVICE",
+      "industry": "Financial Services",
+      "benchmark_symbol": "^CNXFIN",
+      "lot_size": 1
+    },
+    {
+      "symbol": "LICI.NS",
+      "base_symbol": "LICI",
+      "name": "Life Insurance Corporation of India",
+      "sector": "FINSERVICE",
+      "industry": "Life Insurance",
+      "benchmark_symbol": "^CNXFIN",
+      "lot_size": 1
+    },
+    {
+      "symbol": "SBILIFE.NS",
+      "base_symbol": "SBILIFE",
+      "name": "SBI Life Insurance Company Ltd",
+      "sector": "FINSERVICE",
+      "industry": "Life Insurance",
+      "benchmark_symbol": "^CNXFIN",
+      "lot_size": 1
+    },
+    {
+      "symbol": "HDFCLIFE.NS",
+      "base_symbol": "HDFCLIFE",
+      "name": "HDFC Life Insurance Company Ltd",
+      "sector": "FINSERVICE",
+      "industry": "Life Insurance",
+      "benchmark_symbol": "^CNXFIN",
+      "lot_size": 1
+    },
+    {
+      "symbol": "SHRIRAMFIN.NS",
+      "base_symbol": "SHRIRAMFIN",
+      "name": "Shriram Finance Ltd",
+      "sector": "FINSERVICE",
+      "industry": "NBFC",
+      "benchmark_symbol": "^CNXFIN",
+      "lot_size": 1
+    },
+    {
+      "symbol": "CHOLAFIN.NS",
+      "base_symbol": "CHOLAFIN",
+      "name": "Cholamandalam Investment and Finance",
+      "sector": "FINSERVICE",
+      "industry": "NBFC",
+      "benchmark_symbol": "^CNXFIN",
+      "lot_size": 1
+    },
+    {
+      "symbol": "PFC.NS",
+      "base_symbol": "PFC",
+      "name": "Power Finance Corporation Ltd",
+      "sector": "FINSERVICE",
+      "industry": "Financial Institution",
+      "benchmark_symbol": "^CNXFIN",
+      "lot_size": 1
+    },
+    {
+      "symbol": "RECLTD.NS",
+      "base_symbol": "RECLTD",
+      "name": "REC Ltd",
+      "sector": "FINSERVICE",
+      "industry": "Financial Institution",
+      "benchmark_symbol": "^CNXFIN",
+      "lot_size": 1
+    },
+    {
+      "symbol": "MUTHOOTFIN.NS",
+      "base_symbol": "MUTHOOTFIN",
+      "name": "Muthoot Finance Ltd",
+      "sector": "FINSERVICE",
+      "industry": "NBFC",
+      "benchmark_symbol": "^CNXFIN",
+      "lot_size": 1
+    },
+    {
+      "symbol": "ICICIPRULI.NS",
+      "base_symbol": "ICICIPRULI",
+      "name": "ICICI Prudential Life Insurance",
+      "sector": "FINSERVICE",
+      "industry": "Life Insurance",
+      "benchmark_symbol": "^CNXFIN",
+      "lot_size": 1
+    },
+    {
+      "symbol": "ICICIGI.NS",
+      "base_symbol": "ICICIGI",
+      "name": "ICICI Lombard General Insurance",
+      "sector": "FINSERVICE",
+      "industry": "General Insurance",
+      "benchmark_symbol": "^CNXFIN",
+      "lot_size": 1
+    },
+    {
+      "symbol": "TCS.NS",
+      "base_symbol": "TCS",
+      "name": "Tata Consultancy Services Ltd",
+      "sector": "IT",
+      "industry": "IT Services",
+      "benchmark_symbol": "^CNXIT",
+      "lot_size": 1
+    },
+    {
+      "symbol": "INFY.NS",
+      "base_symbol": "INFY",
+      "name": "Infosys Ltd",
+      "sector": "IT",
+      "industry": "IT Services",
+      "benchmark_symbol": "^CNXIT",
+      "lot_size": 1
+    },
+    {
+      "symbol": "HCLTECH.NS",
+      "base_symbol": "HCLTECH",
+      "name": "HCL Technologies Ltd",
+      "sector": "IT",
+      "industry": "IT Services",
+      "benchmark_symbol": "^CNXIT",
+      "lot_size": 1
+    },
+    {
+      "symbol": "WIPRO.NS",
+      "base_symbol": "WIPRO",
+      "name": "Wipro Ltd",
+      "sector": "IT",
+      "industry": "IT Services",
+      "benchmark_symbol": "^CNXIT",
+      "lot_size": 1
+    },
+    {
+      "symbol": "LTIM.NS",
+      "base_symbol": "LTIM",
+      "name": "LTIMindtree Ltd",
+      "sector": "IT",
+      "industry": "IT Services",
+      "benchmark_symbol": "^CNXIT",
+      "lot_size": 1
+    },
+    {
+      "symbol": "TECHM.NS",
+      "base_symbol": "TECHM",
+      "name": "Tech Mahindra Ltd",
+      "sector": "IT",
+      "industry": "IT Services",
+      "benchmark_symbol": "^CNXIT",
+      "lot_size": 1
+    },
+    {
+      "symbol": "PERSISTENT.NS",
+      "base_symbol": "PERSISTENT",
+      "name": "Persistent Systems Ltd",
+      "sector": "IT",
+      "industry": "IT Services",
+      "benchmark_symbol": "^CNXIT",
+      "lot_size": 1
+    },
+    {
+      "symbol": "OFSS.NS",
+      "base_symbol": "OFSS",
+      "name": "Oracle Financial Services Software",
+      "sector": "IT",
+      "industry": "IT Software",
+      "benchmark_symbol": "^CNXIT",
+      "lot_size": 1
+    },
+    {
+      "symbol": "MPHASIS.NS",
+      "base_symbol": "MPHASIS",
+      "name": "Mphasis Ltd",
+      "sector": "IT",
+      "industry": "IT Services",
+      "benchmark_symbol": "^CNXIT",
+      "lot_size": 1
+    },
+    {
+      "symbol": "COFORGE.NS",
+      "base_symbol": "COFORGE",
+      "name": "Coforge Ltd",
+      "sector": "IT",
+      "industry": "IT Services",
+      "benchmark_symbol": "^CNXIT",
+      "lot_size": 1
+    },
+    {
+      "symbol": "MARUTI.NS",
+      "base_symbol": "MARUTI",
+      "name": "Maruti Suzuki India Ltd",
+      "sector": "AUTO",
+      "industry": "Automobiles",
+      "benchmark_symbol": "^CNXAUTO",
+      "lot_size": 1
+    },
+    {
+      "symbol": "TATAMOTORS.NS",
+      "base_symbol": "TATAMOTORS",
+      "name": "Tata Motors Ltd",
+      "sector": "AUTO",
+      "industry": "Automobiles",
+      "benchmark_symbol": "^CNXAUTO",
+      "lot_size": 1
+    },
+    {
+      "symbol": "M&M.NS",
+      "base_symbol": "M&M",
+      "name": "Mahindra & Mahindra Ltd",
+      "sector": "AUTO",
+      "industry": "Automobiles",
+      "benchmark_symbol": "^CNXAUTO",
+      "lot_size": 1
+    },
+    {
+      "symbol": "BAJAJ-AUTO.NS",
+      "base_symbol": "BAJAJ-AUTO",
+      "name": "Bajaj Auto Ltd",
+      "sector": "AUTO",
+      "industry": "2/3 Wheelers",
+      "benchmark_symbol": "^CNXAUTO",
+      "lot_size": 1
+    },
+    {
+      "symbol": "EICHERMOT.NS",
+      "base_symbol": "EICHERMOT",
+      "name": "Eicher Motors Ltd",
+      "sector": "AUTO",
+      "industry": "Automobiles",
+      "benchmark_symbol": "^CNXAUTO",
+      "lot_size": 1
+    },
+    {
+      "symbol": "TVSMOTOR.NS",
+      "base_symbol": "TVSMOTOR",
+      "name": "TVS Motor Company Ltd",
+      "sector": "AUTO",
+      "industry": "2/3 Wheelers",
+      "benchmark_symbol": "^CNXAUTO",
+      "lot_size": 1
+    },
+    {
+      "symbol": "HEROMOTOCO.NS",
+      "base_symbol": "HEROMOTOCO",
+      "name": "Hero MotoCorp Ltd",
+      "sector": "AUTO",
+      "industry": "2/3 Wheelers",
+      "benchmark_symbol": "^CNXAUTO",
+      "lot_size": 1
+    },
+    {
+      "symbol": "BOSCHLTD.NS",
+      "base_symbol": "BOSCHLTD",
+      "name": "Bosch Ltd",
+      "sector": "AUTO",
+      "industry": "Auto Components",
+      "benchmark_symbol": "^CNXAUTO",
+      "lot_size": 1
+    },
+    {
+      "symbol": "MOTHERSON.NS",
+      "base_symbol": "MOTHERSON",
+      "name": "Samvardhana Motherson International",
+      "sector": "AUTO",
+      "industry": "Auto Components",
+      "benchmark_symbol": "^CNXAUTO",
+      "lot_size": 1
+    },
+    {
+      "symbol": "BALKRISIND.NS",
+      "base_symbol": "BALKRISIND",
+      "name": "Balkrishna Industries Ltd",
+      "sector": "AUTO",
+      "industry": "Tyres",
+      "benchmark_symbol": "^CNXAUTO",
+      "lot_size": 1
+    },
+    {
+      "symbol": "RELIANCE.NS",
+      "base_symbol": "RELIANCE",
+      "name": "Reliance Industries Ltd",
+      "sector": "ENERGY",
+      "industry": "Oil & Gas Refining",
+      "benchmark_symbol": "^CNXENERGY",
+      "lot_size": 1
+    },
+    {
+      "symbol": "ONGC.NS",
+      "base_symbol": "ONGC",
+      "name": "Oil & Natural Gas Corp Ltd",
+      "sector": "ENERGY",
+      "industry": "Oil Exploration",
+      "benchmark_symbol": "^CNXENERGY",
+      "lot_size": 1
+    },
+    {
+      "symbol": "NTPC.NS",
+      "base_symbol": "NTPC",
+      "name": "NTPC Ltd",
+      "sector": "ENERGY",
+      "industry": "Power Generation",
+      "benchmark_symbol": "^CNXENERGY",
+      "lot_size": 1
+    },
+    {
+      "symbol": "POWERGRID.NS",
+      "base_symbol": "POWERGRID",
+      "name": "Power Grid Corporation of India",
+      "sector": "ENERGY",
+      "industry": "Power Transmission",
+      "benchmark_symbol": "^CNXENERGY",
+      "lot_size": 1
+    },
+    {
+      "symbol": "COALINDIA.NS",
+      "base_symbol": "COALINDIA",
+      "name": "Coal India Ltd",
+      "sector": "ENERGY",
+      "industry": "Coal Mining",
+      "benchmark_symbol": "^CNXENERGY",
+      "lot_size": 1
+    },
+    {
+      "symbol": "IOC.NS",
+      "base_symbol": "IOC",
+      "name": "Indian Oil Corporation Ltd",
+      "sector": "ENERGY",
+      "industry": "Oil & Gas Refining",
+      "benchmark_symbol": "^CNXENERGY",
+      "lot_size": 1
+    },
+    {
+      "symbol": "BPCL.NS",
+      "base_symbol": "BPCL",
+      "name": "Bharat Petroleum Corporation Ltd",
+      "sector": "ENERGY",
+      "industry": "Oil & Gas Refining",
+      "benchmark_symbol": "^CNXENERGY",
+      "lot_size": 1
+    },
+    {
+      "symbol": "GAIL.NS",
+      "base_symbol": "GAIL",
+      "name": "GAIL (India) Ltd",
+      "sector": "ENERGY",
+      "industry": "Gas Transmission",
+      "benchmark_symbol": "^CNXENERGY",
+      "lot_size": 1
+    },
+    {
+      "symbol": "ADANIENT.NS",
+      "base_symbol": "ADANIENT",
+      "name": "Adani Enterprises Ltd",
+      "sector": "ENERGY",
+      "industry": "Trading & Energy",
+      "benchmark_symbol": "^CNXENERGY",
+      "lot_size": 1
+    },
+    {
+      "symbol": "ITC.NS",
+      "base_symbol": "ITC",
+      "name": "ITC Ltd",
+      "sector": "FMCG",
+      "industry": "Diversified FMCG",
+      "benchmark_symbol": "^CNXFMCG",
+      "lot_size": 1
+    },
+    {
+      "symbol": "HINDUNILVR.NS",
+      "base_symbol": "HINDUNILVR",
+      "name": "Hindustan Unilever Ltd",
+      "sector": "FMCG",
+      "industry": "Personal Care & Food",
+      "benchmark_symbol": "^CNXFMCG",
+      "lot_size": 1
+    },
+    {
+      "symbol": "NESTLEIND.NS",
+      "base_symbol": "NESTLEIND",
+      "name": "Nestle India Ltd",
+      "sector": "FMCG",
+      "industry": "Food Products",
+      "benchmark_symbol": "^CNXFMCG",
+      "lot_size": 1
+    },
+    {
+      "symbol": "BRITANNIA.NS",
+      "base_symbol": "BRITANNIA",
+      "name": "Britannia Industries Ltd",
+      "sector": "FMCG",
+      "industry": "Food Products",
+      "benchmark_symbol": "^CNXFMCG",
+      "lot_size": 1
+    },
+    {
+      "symbol": "TATACONSUM.NS",
+      "base_symbol": "TATACONSUM",
+      "name": "Tata Consumer Products Ltd",
+      "sector": "FMCG",
+      "industry": "Food & Beverages",
+      "benchmark_symbol": "^CNXFMCG",
+      "lot_size": 1
+    },
+    {
+      "symbol": "VBL.NS",
+      "base_symbol": "VBL",
+      "name": "Varun Beverages Ltd",
+      "sector": "FMCG",
+      "industry": "Beverages",
+      "benchmark_symbol": "^CNXFMCG",
+      "lot_size": 1
+    },
+    {
+      "symbol": "GODREJCP.NS",
+      "base_symbol": "GODREJCP",
+      "name": "Godrej Consumer Products Ltd",
+      "sector": "FMCG",
+      "industry": "Personal Care",
+      "benchmark_symbol": "^CNXFMCG",
+      "lot_size": 1
+    },
+    {
+      "symbol": "DABUR.NS",
+      "base_symbol": "DABUR",
+      "name": "Dabur India Ltd",
+      "sector": "FMCG",
+      "industry": "Personal Care",
+      "benchmark_symbol": "^CNXFMCG",
+      "lot_size": 1
+    },
+    {
+      "symbol": "MARICO.NS",
+      "base_symbol": "MARICO",
+      "name": "Marico Ltd",
+      "sector": "FMCG",
+      "industry": "Personal Care",
+      "benchmark_symbol": "^CNXFMCG",
+      "lot_size": 1
+    },
+    {
+      "symbol": "COLPAL.NS",
+      "base_symbol": "COLPAL",
+      "name": "Colgate-Palmolive (India) Ltd",
+      "sector": "FMCG",
+      "industry": "Personal Care",
+      "benchmark_symbol": "^CNXFMCG",
+      "lot_size": 1
+    },
+    {
+      "symbol": "SUNPHARMA.NS",
+      "base_symbol": "SUNPHARMA",
+      "name": "Sun Pharmaceutical Industries Ltd",
+      "sector": "PHARMA",
+      "industry": "Pharmaceuticals",
+      "benchmark_symbol": "^CNXPHARMA",
+      "lot_size": 1
+    },
+    {
+      "symbol": "CIPLA.NS",
+      "base_symbol": "CIPLA",
+      "name": "Cipla Ltd",
+      "sector": "PHARMA",
+      "industry": "Pharmaceuticals",
+      "benchmark_symbol": "^CNXPHARMA",
+      "lot_size": 1
+    },
+    {
+      "symbol": "DRREDDY.NS",
+      "base_symbol": "DRREDDY",
+      "name": "Dr. Reddy's Laboratories Ltd",
+      "sector": "PHARMA",
+      "industry": "Pharmaceuticals",
+      "benchmark_symbol": "^CNXPHARMA",
+      "lot_size": 1
+    },
+    {
+      "symbol": "APOLLOHOSP.NS",
+      "base_symbol": "APOLLOHOSP",
+      "name": "Apollo Hospitals Enterprise Ltd",
+      "sector": "PHARMA",
+      "industry": "Healthcare Facilities",
+      "benchmark_symbol": "^CNXPHARMA",
+      "lot_size": 1
+    },
+    {
+      "symbol": "DIVISLAB.NS",
+      "base_symbol": "DIVISLAB",
+      "name": "Divi's Laboratories Ltd",
+      "sector": "PHARMA",
+      "industry": "Pharmaceuticals",
+      "benchmark_symbol": "^CNXPHARMA",
+      "lot_size": 1
+    },
+    {
+      "symbol": "LUPIN.NS",
+      "base_symbol": "LUPIN",
+      "name": "Lupin Ltd",
+      "sector": "PHARMA",
+      "industry": "Pharmaceuticals",
+      "benchmark_symbol": "^CNXPHARMA",
+      "lot_size": 1
+    },
+    {
+      "symbol": "TORNTPHARM.NS",
+      "base_symbol": "TORNTPHARM",
+      "name": "Torrent Pharmaceuticals Ltd",
+      "sector": "PHARMA",
+      "industry": "Pharmaceuticals",
+      "benchmark_symbol": "^CNXPHARMA",
+      "lot_size": 1
+    },
+    {
+      "symbol": "ZYDUSLIFE.NS",
+      "base_symbol": "ZYDUSLIFE",
+      "name": "Zydus Lifesciences Ltd",
+      "sector": "PHARMA",
+      "industry": "Pharmaceuticals",
+      "benchmark_symbol": "^CNXPHARMA",
+      "lot_size": 1
+    },
+    {
+      "symbol": "AUROPHARMA.NS",
+      "base_symbol": "AUROPHARMA",
+      "name": "Aurobindo Pharma Ltd",
+      "sector": "PHARMA",
+      "industry": "Pharmaceuticals",
+      "benchmark_symbol": "^CNXPHARMA",
+      "lot_size": 1
+    },
+    {
+      "symbol": "TATASTEEL.NS",
+      "base_symbol": "TATASTEEL",
+      "name": "Tata Steel Ltd",
+      "sector": "METAL",
+      "industry": "Steel",
+      "benchmark_symbol": "^CNXMETAL",
+      "lot_size": 1
+    },
+    {
+      "symbol": "JSWSTEEL.NS",
+      "base_symbol": "JSWSTEEL",
+      "name": "JSW Steel Ltd",
+      "sector": "METAL",
+      "industry": "Steel",
+      "benchmark_symbol": "^CNXMETAL",
+      "lot_size": 1
+    },
+    {
+      "symbol": "HINDALCO.NS",
+      "base_symbol": "HINDALCO",
+      "name": "Hindalco Industries Ltd",
+      "sector": "METAL",
+      "industry": "Aluminium",
+      "benchmark_symbol": "^CNXMETAL",
+      "lot_size": 1
+    },
+    {
+      "symbol": "VEDL.NS",
+      "base_symbol": "VEDL",
+      "name": "Vedanta Ltd",
+      "sector": "METAL",
+      "industry": "Diversified Metals",
+      "benchmark_symbol": "^CNXMETAL",
+      "lot_size": 1
+    },
+    {
+      "symbol": "LT.NS",
+      "base_symbol": "LT",
+      "name": "Larsen & Toubro Ltd",
+      "sector": "INFRA",
+      "industry": "Engineering & Construction",
+      "benchmark_symbol": "^CNXINFRA",
+      "lot_size": 1
+    },
+    {
+      "symbol": "ADANIPORTS.NS",
+      "base_symbol": "ADANIPORTS",
+      "name": "Adani Ports & Special Economic Zone",
+      "sector": "INFRA",
+      "industry": "Ports & Logistics",
+      "benchmark_symbol": "^CNXINFRA",
+      "lot_size": 1
+    },
+    {
+      "symbol": "ULTRACEMCO.NS",
+      "base_symbol": "ULTRACEMCO",
+      "name": "UltraTech Cement Ltd",
+      "sector": "INFRA",
+      "industry": "Cement",
+      "benchmark_symbol": "^CNXINFRA",
+      "lot_size": 1
+    },
+    {
+      "symbol": "GRASIM.NS",
+      "base_symbol": "GRASIM",
+      "name": "Grasim Industries Ltd",
+      "sector": "INFRA",
+      "industry": "Diversified",
+      "benchmark_symbol": "^CNXINFRA",
+      "lot_size": 1
+    },
+    {
+      "symbol": "AMBUJACEM.NS",
+      "base_symbol": "AMBUJACEM",
+      "name": "Ambuja Cements Ltd",
+      "sector": "INFRA",
+      "industry": "Cement",
+      "benchmark_symbol": "^CNXINFRA",
+      "lot_size": 1
+    },
+    {
+      "symbol": "SHREECEM.NS",
+      "base_symbol": "SHREECEM",
+      "name": "Shree Cement Ltd",
+      "sector": "INFRA",
+      "industry": "Cement",
+      "benchmark_symbol": "^CNXINFRA",
+      "lot_size": 1
+    },
+    {
+      "symbol": "SIEMENS.NS",
+      "base_symbol": "SIEMENS",
+      "name": "Siemens Ltd",
+      "sector": "INFRA",
+      "industry": "Capital Goods",
+      "benchmark_symbol": "^CNXINFRA",
+      "lot_size": 1
+    },
+    {
+      "symbol": "ABB.NS",
+      "base_symbol": "ABB",
+      "name": "ABB India Ltd",
+      "sector": "INFRA",
+      "industry": "Electrical Equipment",
+      "benchmark_symbol": "^CNXINFRA",
+      "lot_size": 1
+    },
+    {
+      "symbol": "HAVELLS.NS",
+      "base_symbol": "HAVELLS",
+      "name": "Havells India Ltd",
+      "sector": "INFRA",
+      "industry": "Electrical Equipment",
+      "benchmark_symbol": "^CNXINFRA",
+      "lot_size": 1
+    },
+    {
+      "symbol": "BEL.NS",
+      "base_symbol": "BEL",
+      "name": "Bharat Electronics Ltd",
+      "sector": "INFRA",
+      "industry": "Aerospace & Defence",
+      "benchmark_symbol": "^CNXINFRA",
+      "lot_size": 1
+    },
+    {
+      "symbol": "HAL.NS",
+      "base_symbol": "HAL",
+      "name": "Hindustan Aeronautics Ltd",
+      "sector": "INFRA",
+      "industry": "Aerospace & Defence",
+      "benchmark_symbol": "^CNXINFRA",
+      "lot_size": 1
+    },
+    {
+      "symbol": "POLYCAB.NS",
+      "base_symbol": "POLYCAB",
+      "name": "Polycab India Ltd",
+      "sector": "INFRA",
+      "industry": "Cables & Wires",
+      "benchmark_symbol": "^CNXINFRA",
+      "lot_size": 1
+    },
+    {
+      "symbol": "CUMMINSIND.NS",
+      "base_symbol": "CUMMINSIND",
+      "name": "Cummins India Ltd",
+      "sector": "INFRA",
+      "industry": "Engines & Generators",
+      "benchmark_symbol": "^CNXINFRA",
+      "lot_size": 1
+    },
+    {
+      "symbol": "DLF.NS",
+      "base_symbol": "DLF",
+      "name": "DLF Ltd",
+      "sector": "REALTY",
+      "industry": "Real Estate Development",
+      "benchmark_symbol": "^CNXREALTY",
+      "lot_size": 1
+    },
+    {
+      "symbol": "OBEROIRLTY.NS",
+      "base_symbol": "OBEROIRLTY",
+      "name": "Oberoi Realty Ltd",
+      "sector": "REALTY",
+      "industry": "Real Estate Development",
+      "benchmark_symbol": "^CNXREALTY",
+      "lot_size": 1
+    },
+    {
+      "symbol": "PHOENIXLTD.NS",
+      "base_symbol": "PHOENIXLTD",
+      "name": "The Phoenix Mills Ltd",
+      "sector": "REALTY",
+      "industry": "Commercial Real Estate",
+      "benchmark_symbol": "^CNXREALTY",
+      "lot_size": 1
+    },
+    {
+      "symbol": "TITAN.NS",
+      "base_symbol": "TITAN",
+      "name": "Titan Company Ltd",
+      "sector": "CONSUMER",
+      "industry": "Gems, Jewellery & Watches",
+      "benchmark_symbol": "^NSEI",
+      "lot_size": 1
+    },
+    {
+      "symbol": "ASIANPAINT.NS",
+      "base_symbol": "ASIANPAINT",
+      "name": "Asian Paints Ltd",
+      "sector": "CONSUMER",
+      "industry": "Paints",
+      "benchmark_symbol": "^NSEI",
+      "lot_size": 1
+    },
+    {
+      "symbol": "BERGEPAINT.NS",
+      "base_symbol": "BERGEPAINT",
+      "name": "Berger Paints India Ltd",
+      "sector": "CONSUMER",
+      "industry": "Paints",
+      "benchmark_symbol": "^NSEI",
+      "lot_size": 1
+    },
+    {
+      "symbol": "PIDILITIND.NS",
+      "base_symbol": "PIDILITIND",
+      "name": "Pidilite Industries Ltd",
+      "sector": "CHEMICALS",
+      "industry": "Adhesives & Chemicals",
+      "benchmark_symbol": "^NSEI",
+      "lot_size": 1
+    },
+    {
+      "symbol": "TRENT.NS",
+      "base_symbol": "TRENT",
+      "name": "Trent Ltd",
+      "sector": "CONSUMER",
+      "industry": "Retail",
+      "benchmark_symbol": "^NSEI",
+      "lot_size": 1
+    },
+    {
+      "symbol": "ZOMATO.NS",
+      "base_symbol": "ZOMATO",
+      "name": "Zomato Ltd",
+      "sector": "CONSUMER",
+      "industry": "E-Commerce",
+      "benchmark_symbol": "^NSEI",
+      "lot_size": 1
+    },
+    {
+      "symbol": "PAGEIND.NS",
+      "base_symbol": "PAGEIND",
+      "name": "Page Industries Ltd",
+      "sector": "CONSUMER",
+      "industry": "Apparel",
+      "benchmark_symbol": "^NSEI",
+      "lot_size": 1
+    },
+    {
+      "symbol": "INDIGO.NS",
+      "base_symbol": "INDIGO",
+      "name": "InterGlobe Aviation Ltd",
+      "sector": "AVIATION",
+      "industry": "Airlines",
+      "benchmark_symbol": "^NSEI",
+      "lot_size": 1
+    },
+    {
+      "symbol": "BHARTIARTL.NS",
+      "base_symbol": "BHARTIARTL",
+      "name": "Bharti Airtel Ltd",
+      "sector": "TELECOM",
+      "industry": "Telecom Services",
+      "benchmark_symbol": "^NSEI",
+      "lot_size": 1
+    },
+    {
+      "symbol": "SRF.NS",
+      "base_symbol": "SRF",
+      "name": "SRF Ltd",
+      "sector": "CHEMICALS",
+      "industry": "Specialty Chemicals",
+      "benchmark_symbol": "^NSEI",
+      "lot_size": 1
+    },
+    {
+      "symbol": "PIIND.NS",
+      "base_symbol": "PIIND",
+      "name": "PI Industries Ltd",
+      "sector": "CHEMICALS",
+      "industry": "Agrochemicals",
+      "benchmark_symbol": "^NSEI",
+      "lot_size": 1
+    }
+  ]
+}
