@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
@@ -104,6 +103,16 @@ class UniverseConfig(BaseModel):
             if e.symbol == symbol:
                 return e
         raise KeyError(f"Symbol '{symbol}' not found in universe '{self.universe_id}'")
+
+    @property
+    def equity_count(self) -> int:
+        """Number of equity constituents in this universe."""
+        return len(self.equities)
+
+    @property
+    def benchmark(self) -> str:
+        """Broad market benchmark symbol (e.g. '^NSEI')."""
+        return self.benchmarks.broad.symbol
 
     def get_symbols(self) -> list[str]:
         """Return sorted list of all equity symbols in the universe."""

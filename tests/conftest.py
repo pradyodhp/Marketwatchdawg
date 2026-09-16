@@ -1,6 +1,6 @@
 """Pytest configuration and shared fixtures for MarketWatch AI."""
 
-from datetime import date, datetime
+from datetime import datetime
 from zoneinfo import ZoneInfo
 import pytest
 from marketwatch.models.candle import Candle, CandleBatch

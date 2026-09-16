@@ -106,6 +106,9 @@ class Candle(BaseModel):
                 f"Low ({self.low}) must be <= min(open, close) (open={self.open}, close={self.close})"
             )
 
+        # 5. Validate trading hours eagerly — raises ValueError if out of 09:15-15:30 IST
+        compute_slot_index(self.timestamp)
+
         return self
 
     @property

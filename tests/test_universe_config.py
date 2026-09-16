@@ -1,11 +1,9 @@
 """Unit tests for NIFTY 100 universe configuration and settings loader."""
 
-from pathlib import Path
 import pytest
 from pydantic import ValidationError
-from marketwatch.config.settings import Settings, load_settings
+from marketwatch.config.settings import load_settings
 from marketwatch.config.universe import (
-    EquityConfig,
     UniverseConfig,
     load_universe_config,
 )
