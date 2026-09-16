@@ -12,7 +12,7 @@ MarketWatch AI is an explainable, real-time market surveillance and behavioral a
 
 - [x] **Phase 1: Project Scaffolding & NIFTY 100 Specification** - Establish headless domain models, provider-agnostic interfaces, and declarative NIFTY 100 universe configuration.
 - [x] **Phase 2: Free Data Ingestion & Curated Parquet Pipeline** - Pre-fetch 60 days of 5m candles for NIFTY 100 via yfinance without data fabrication, reporting coverage and establishing offline Parquet as the sole runtime truth.
-- [ ] **Phase 3: Deterministic Replay Engine & Stream Architecture** - Implement synchronized 5m candle replay across 100 stocks (75 bars/day, 09:15-15:30 IST) with strict temporal causal boundaries.
+- [x] **Phase 3: Deterministic Replay Engine & Stream Architecture** - Implement synchronized 5m candle replay across 100 stocks (75 bars/day, 09:15-15:30 IST) with strict temporal causal boundaries.
 - [ ] **Phase 4: Feature Engineering & Time-of-Day (TOD) Baselines** - Build scale-invariant relative features, 75-slot diurnal baselines, and baseline anti-contamination protection.
 - [ ] **Phase 5: Statistical Anomaly Detector (Z-Scores & EWMA)** - Implement multi-metric rolling z-score and EWMA shock detectors producing structured deviation signals.
 - [ ] **Phase 6: Multivariate Isolation Forest Detector & Temporal Validation** - Train scikit-learn Isolation Forest strictly on pre-replay historical calibration data, verifying zero lookahead leakage with automated tests.
@@ -67,7 +67,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 03-01: Synchronized Replay Engine, clock controller, playback state management, and stream iterator.
+- [x] 03-01: Synchronized Replay Engine, clock controller, playback state management, and stream iterator.
 
 ### Phase 4: Feature Engineering & Time-of-Day (TOD) Baselines
 **Goal**: Build vectorized calculation of scale-invariant features (returns, volume ratios, Parkinson volatility, market-relative excess returns), a 75-slot Time-of-Day (TOD) baseline engine that eliminates diurnal market open/close false alarms, and baseline anti-contamination logic.  
@@ -210,7 +210,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 |-------|------|----------------|--------|-----------|
 | 1. Project Scaffolding & NIFTY 100 Specification | mvp | 1/1 | Complete | 2026-09-15 |
 | 2. Free Data Ingestion & Curated Parquet Pipeline | mvp | 1/1 | Complete | 2026-09-16 |
-| 3. Deterministic Replay Engine & Stream Architecture | mvp | 0/1 | Not started | - |
+| 3. Deterministic Replay Engine & Stream Architecture | mvp | 1/1 | Complete | 2026-09-16 |
 | 4. Feature Engineering & Time-of-Day (TOD) Baselines | mvp | 0/1 | Not started | - |
 | 5. Statistical Anomaly Detector (Z-Scores & EWMA) | mvp | 0/1 | Not started | - |
 | 6. Multivariate Isolation Forest Detector & Temporal Validation | mvp | 0/1 | Not started | - |
