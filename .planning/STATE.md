@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-09-15)
 
 ## Current Position
 
-Phase: 5 of 12 (Statistical Anomaly Detector (Z-Scores & EWMA)) Complete
-Plan: 1 of 1 in Phase 5 complete (05-01)
-Status: Phase 5 Complete (Ready for Phase 6)
-Last activity: 2026-09-17 — Phase 5 executed: rolling z-score detector, EWMA detector, and structured anomaly output contract with explicit anti-leakage safeguards.
+Phase: 6 of 12 (Multivariate Isolation Forest Detector & Temporal Validation) Complete
+Plan: 1 of 1 in Phase 6 complete (06-01)
+Status: Phase 6 Complete (Ready for Phase 7)
+Last activity: 2026-09-17 — Phase 6 executed: deterministic Isolation Forest detector, finite feature-matrix builder, chronological split utilities, expanding walk-forward validation, and temporal leakage tests.
 
-Progress: [█████░░░░░] 42%
+Progress: [██████░░░░] 50%
 
 ## Performance Metrics
 

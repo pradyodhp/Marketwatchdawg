@@ -120,9 +120,9 @@ See full Post-MVP / Production Evolution roadmap section for details:
 | STAT-01 | Phase 5 | Pending |
 | STAT-02 | Phase 5 | Pending |
 | STAT-03 | Phase 5 | Pending |
-| ML-01 | Phase 6 | Pending |
-| ML-02 | Phase 6 | Pending |
-| ML-03 | Phase 6 | Pending |
+| ML-01 | Phase 6 | Complete |
+| ML-02 | Phase 6 | Complete |
+| ML-03 | Phase 6 | Complete |
 | FUSE-01 | Phase 7 | Pending |
 | FUSE-02 | Phase 7 | Pending |
 | FUSE-03 | Phase 7 | Pending |
@@ -143,7 +143,7 @@ See full Post-MVP / Production Evolution roadmap section for details:
 | DASH-03 | Phase 12 | Pending |
 | DASH-04 | Phase 12 | Pending |
 | TEST-01 | Phase 4 | Pending |
-| TEST-02 | Phase 6 | Pending |
+| TEST-02 | Phase 6 | Complete |
 | TEST-03 | Phase 4 | Pending |
 | TEST-04 | Phase 10 | Pending |
 
