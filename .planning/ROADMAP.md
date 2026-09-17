@@ -197,7 +197,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 12-01: Streamlit dashboard application, Plotly financial components, data quality badge, Surveillance Controller panel, and demo guide.
+- [x] 12-01: Streamlit dashboard application, Plotly financial components, data quality badge, Surveillance Controller panel, and demo guide.
 
 ---
 
@@ -219,7 +219,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 9. Alert Engine & Lifecycle Management | mvp | 1/1 | Complete | 2026-09-17 |
 | 10. Surveillance Controller (Deterministic Anomaly Injection) | mvp | 1/1 | Complete | 2026-09-17 |
 | 11. Headless Core Decoupling & FastAPI Service | mvp | 1/1 | Complete | 2026-09-17 |
-| 12. Streamlit + Plotly Analyst Dashboard & Hackathon Demo | mvp | 0/1 | Not started | - |
+| 12. Streamlit + Plotly Analyst Dashboard & Hackathon Demo | mvp | 1/1 | Complete | 2026-09-17 |
 
 ---
 
