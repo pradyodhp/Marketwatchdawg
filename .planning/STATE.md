@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-09-15)
 
 ## Current Position
 
-Phase: 6 of 12 (Multivariate Isolation Forest Detector & Temporal Validation) Complete
-Plan: 1 of 1 in Phase 6 complete (06-01)
-Status: Phase 6 Complete (Ready for Phase 7)
-Last activity: 2026-09-17 — Phase 6 executed: deterministic Isolation Forest detector, finite feature-matrix builder, chronological split utilities, expanding walk-forward validation, and temporal leakage tests.
+Phase: 7 of 12 (Transparent 0–100 Risk Scoring & Signal Fusion) Complete
+Plan: 1 of 1 in Phase 7 complete (07-01)
+Status: Phase 7 Complete (Ready for Phase 8)
+Last activity: 2026-09-17 — Phase 7 executed: bounded detector-level fusion, configurable score weights and severity thresholds, agreement bonus, and structured risk assessment output.
 
-Progress: [██████░░░░] 50%
+Progress: [███████░░░] 58%
 
 ## Performance Metrics
 

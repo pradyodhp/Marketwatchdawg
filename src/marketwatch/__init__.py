@@ -16,6 +16,7 @@ from marketwatch.isolation_forest import (
     chronological_split,
 )
 from marketwatch.models.signals import AnomalySeverity, AnomalySignal
+from marketwatch.risk import RiskAssessment, RiskContribution, RiskScorer, RiskSeverity
 
 __version__ = "0.1.0"
 
@@ -28,6 +29,10 @@ __all__ = [
     "FeatureMatrixBuilder",
     "FeaturePipeline",
     "IsolationForestDetector",
+    "RiskAssessment",
+    "RiskContribution",
+    "RiskScorer",
+    "RiskSeverity",
     "TODBaselineEngine",
     "TemporalSplit",
     "WalkForwardResult",

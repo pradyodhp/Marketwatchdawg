@@ -16,7 +16,7 @@ MarketWatch AI is an explainable, real-time market surveillance and behavioral a
 - [x] **Phase 4: Feature Engineering & Time-of-Day (TOD) Baselines** - Build scale-invariant relative features, 75-slot diurnal baselines, and baseline anti-contamination protection.
 - [x] **Phase 5: Statistical Anomaly Detector (Z-Scores & EWMA)** - Implement multi-metric rolling z-score and EWMA shock detectors producing structured deviation signals.
 - [x] **Phase 6: Multivariate Isolation Forest Detector & Temporal Validation** - Train scikit-learn Isolation Forest strictly on pre-replay historical calibration data, verifying zero lookahead leakage with automated tests.
-- [ ] **Phase 7: Transparent 0–100 Risk Scoring & Signal Fusion** - Mathematically formulated, documented scoring engine combining statistical, ML, and market context signals with saturation curves.
+- [x] **Phase 7: Transparent 0–100 Risk Scoring & Signal Fusion** - Mathematically formulated, documented scoring engine combining statistical, ML, and market context signals with saturation curves.
 - [ ] **Phase 8: Regulatory-Oriented Surveillance Explainability** - Generate lightweight, deterministic evidence summaries citing exact feature deviations, sector context, and mandatory non-manipulation disclaimers.
 - [ ] **Phase 9: Alert Engine & Lifecycle Management** - Implement alert severity tiers (LOW/MED/HIGH/CRIT), per-ticker cooldown windows, and active queryable alert registry.
 - [ ] **Phase 10: Surveillance Controller (Deterministic Anomaly Injection)** - Build interactive middleware injecting raw candle distortions into the stream to verify genuine pipeline detection without shortcuts.
@@ -125,7 +125,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 07-01: Transparent scoring mathematics, saturation functions, documentation, and declarative config loader.
+- [x] 07-01: Transparent scoring mathematics, bounded detector fusion, severity mapping, and structured risk assessment contract.
 
 ### Phase 8: Regulatory-Oriented Surveillance Explainability
 **Goal**: Build a lightweight, deterministic quantitative explanation engine that synthesizes feature deviations, detector ratios, and sector context into human-readable regulatory-oriented surveillance alert text with mandatory non-manipulation disclaimers.  
@@ -214,7 +214,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 4. Feature Engineering & Time-of-Day (TOD) Baselines | mvp | 1/1 | Complete | 2026-09-16 |
 | 5. Statistical Anomaly Detector (Z-Scores & EWMA) | mvp | 1/1 | Complete | 2026-09-17 |
 | 6. Multivariate Isolation Forest Detector & Temporal Validation | mvp | 1/1 | Complete | 2026-09-17 |
-| 7. Transparent 0–100 Risk Scoring & Signal Fusion | mvp | 0/1 | Not started | - |
+| 7. Transparent 0–100 Risk Scoring & Signal Fusion | mvp | 1/1 | Complete | 2026-09-17 |
 | 8. Regulatory-Oriented Surveillance Explainability | mvp | 0/1 | Not started | - |
 | 9. Alert Engine & Lifecycle Management | mvp | 0/1 | Not started | - |
 | 10. Surveillance Controller (Deterministic Anomaly Injection) | mvp | 0/1 | Not started | - |

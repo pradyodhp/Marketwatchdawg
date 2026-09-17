@@ -15,6 +15,7 @@ from marketwatch.isolation_forest import (
     WalkForwardResult,
     chronological_split,
 )
+from marketwatch.risk import RiskAssessment, RiskContribution, RiskScorer, RiskSeverity
 
 __all__ = [
     "BaselineStats",
@@ -23,6 +24,10 @@ __all__ = [
     "FeatureMatrixBuilder",
     "FeaturePipeline",
     "IsolationForestDetector",
+    "RiskAssessment",
+    "RiskContribution",
+    "RiskScorer",
+    "RiskSeverity",
     "TODBaselineEngine",
     "TemporalSplit",
     "WalkForwardResult",
