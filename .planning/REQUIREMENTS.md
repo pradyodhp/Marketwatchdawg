@@ -126,9 +126,9 @@ See full Post-MVP / Production Evolution roadmap section for details:
 | FUSE-01 | Phase 7 | Complete |
 | FUSE-02 | Phase 7 | Complete |
 | FUSE-03 | Phase 7 | Complete |
-| EXPL-01 | Phase 8 | Pending |
-| EXPL-02 | Phase 8 | Pending |
-| EXPL-03 | Phase 8 | Pending |
+| EXPL-01 | Phase 8 | Complete |
+| EXPL-02 | Phase 8 | Complete |
+| EXPL-03 | Phase 8 | Complete |
 | ALRT-01 | Phase 9 | Pending |
 | ALRT-02 | Phase 9 | Pending |
 | ALRT-03 | Phase 9 | Pending |
@@ -154,4 +154,4 @@ See full Post-MVP / Production Evolution roadmap section for details:
 
 ---
 *Requirements defined: 2026-09-15*  
-*Last updated: 2026-09-15 after final roadmap refinement*  
+*Last updated: 2026-09-17 after Phase 8 completion*

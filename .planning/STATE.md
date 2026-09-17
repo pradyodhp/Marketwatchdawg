@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-09-15)
 
 **Core value:** Empower market surveillance analysts with immediate, explainable, and statistically grounded intelligence on what is abnormal about a stock right now, how abnormal it is, and why it was flagged — without black-box opacity or unsubstantiated claims of manipulation.  
-**Current focus:** Phase 1: Project Scaffolding & NIFTY 100 Specification
+**Current focus:** Phase 8: Regulatory-Oriented Surveillance Explainability
 
 ## Current Position
 
-Phase: 7 of 12 (Transparent 0–100 Risk Scoring & Signal Fusion) Complete
-Plan: 1 of 1 in Phase 7 complete (07-01)
-Status: Phase 7 Complete (Ready for Phase 8)
-Last activity: 2026-09-17 — Phase 7 executed: bounded detector-level fusion, configurable score weights and severity thresholds, agreement bonus, and structured risk assessment output.
+Phase: 8 of 12 (Regulatory-Oriented Surveillance Explainability) Complete
+Plan: 1 of 1 in Phase 8 complete (08-01)
+Status: Phase 8 Complete (Ready for Phase 9)
+Last activity: 2026-09-17 — Phase 8 executed: deterministic evidence contracts, neutral detector and feature explanations, score composition details, and mandatory disclaimer.
 
-Progress: [███████░░░] 58%
+Progress: [████████░░] 67%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
+- Total plans completed: 8
 - Average duration: ~30 min
 - Total execution time: 1.75 hours
 
@@ -30,9 +30,14 @@ Progress: [███████░░░] 58%
 | 1. Scaffolding & NIFTY 100 | 1/1 | 15m | 15m |
 | 2. Free Data Ingestion | 1/1 | 75m | 75m |
 | 3. Replay Engine | 1/1 | 15m | 15m |
+| 4. Feature Engineering & TOD Baselines | 1/1 | 1 | - |
+| 5. Statistical Anomaly Detection | 1/1 | 1 | - |
+| 6. Isolation Forest & Temporal Validation | 1/1 | 1 | - |
+| 7. Risk Scoring & Signal Fusion | 1/1 | 1 | - |
+| 8. Regulatory Explainability | 1/1 | 1 | - |
 
 **Recent Trend:**
-- Last 5 plans: 01-01, 02-01, 03-01
+- Last 5 plans: 04-01, 05-01, 06-01, 07-01, 08-01
 - Trend: Fast & Stable
 
 *Updated after each plan completion*
@@ -72,4 +77,4 @@ None yet.
  
 Last session: 2026-09-16 23:27 IST
 Stopped at: Phase 3 executed and verified (Plan 03-01 complete, 94/94 tests passing)
-Next step: Phase 4: Feature Engineering & Time-of-Day (TOD) Baselines (`/gsd-plan-phase 4`)
+Next step: Phase 9: Alert Engine & Lifecycle Management (`/gsd-plan-phase 9`)
