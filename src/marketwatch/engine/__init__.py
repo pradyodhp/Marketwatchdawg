@@ -6,6 +6,13 @@ from marketwatch.alert_engine import (
     AlertState,
     SurveillanceAlert,
 )
+from marketwatch.controller import (
+    ControllerResult,
+    InjectionConfig,
+    InjectionResult,
+    InjectionType,
+    SurveillanceController,
+)
 from marketwatch.detectors import (
     EWMADetector,
     ZScoreDetector,
@@ -37,6 +44,7 @@ __all__ = [
     "AlertEvent",
     "AlertState",
     "BaselineStats",
+    "ControllerResult",
     "EWMADetector",
     "ExplainabilityEngine",
     "ExplanationFactor",
@@ -44,12 +52,16 @@ __all__ = [
     "FeatureMatrix",
     "FeatureMatrixBuilder",
     "FeaturePipeline",
+    "InjectionConfig",
+    "InjectionResult",
+    "InjectionType",
     "IsolationForestDetector",
     "RiskAssessment",
     "RiskContribution",
     "RiskScorer",
     "RiskSeverity",
     "SurveillanceAlert",
+    "SurveillanceController",
     "SurveillanceExplanation",
     "TODBaselineEngine",
     "TemporalSplit",

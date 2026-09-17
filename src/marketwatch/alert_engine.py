@@ -60,6 +60,7 @@ class SurveillanceAlert(BaseModel):
     detector_metadata: tuple[dict[str, Any], ...] = ()
     data_quality_reason: str | None = None
     is_simulated: bool = False
+    simulation_metadata: dict[str, Any] = Field(default_factory=dict)
     history: tuple[AlertEvent, ...] = ()
 
     @field_validator("timestamp")
@@ -105,6 +106,8 @@ class AlertEngine:
         assessment: RiskAssessment,
         *,
         explanation: SurveillanceExplanation | None = None,
+        is_simulated: bool = False,
+        simulation_metadata: dict[str, Any] | None = None,
     ) -> SurveillanceAlert:
         """Create an alert or return the existing alert for the same event."""
         if not assessment.valid or not assessment.contributions:
@@ -141,6 +144,8 @@ class AlertEngine:
                 contribution.metadata for contribution in assessment.contributions
             ),
             data_quality_reason=assessment.reason,
+            is_simulated=is_simulated,
+            simulation_metadata=dict(simulation_metadata or {}),
             history=(
                 AlertEvent(
                     timestamp=assessment.timestamp,
