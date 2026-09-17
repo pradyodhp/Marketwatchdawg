@@ -18,7 +18,7 @@ MarketWatch AI is an explainable, real-time market surveillance and behavioral a
 - [x] **Phase 6: Multivariate Isolation Forest Detector & Temporal Validation** - Train scikit-learn Isolation Forest strictly on pre-replay historical calibration data, verifying zero lookahead leakage with automated tests.
 - [x] **Phase 7: Transparent 0–100 Risk Scoring & Signal Fusion** - Mathematically formulated, documented scoring engine combining statistical, ML, and market context signals with saturation curves.
 - [x] **Phase 8: Regulatory-Oriented Surveillance Explainability** - Generate lightweight, deterministic evidence summaries citing exact feature deviations, sector context, and mandatory non-manipulation disclaimers.
-- [ ] **Phase 9: Alert Engine & Lifecycle Management** - Implement alert severity tiers (LOW/MED/HIGH/CRIT), per-ticker cooldown windows, and active queryable alert registry.
+- [x] **Phase 9: Alert Engine & Lifecycle Management** - Implement alert severity tiers (LOW/MED/HIGH/CRIT), per-ticker cooldown windows, and active queryable alert registry.
 - [ ] **Phase 10: Surveillance Controller (Deterministic Anomaly Injection)** - Build interactive middleware injecting raw candle distortions into the stream to verify genuine pipeline detection without shortcuts.
 - [ ] **Phase 11: Headless Core Decoupling & FastAPI Service** - Ensure core engine is completely independent, wrapped cleanly by FastAPI REST routes exposing quality metadata and alert feeds with Pydantic v2 schemas.
 - [ ] **Phase 12: Streamlit + Plotly Analyst Dashboard & Hackathon Demo** - Deliver a responsive surveillance UI with active alert feed, multi-track Plotly charts, data quality indicators, and the presenter Surveillance Controller.
@@ -153,7 +153,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 09-01: Alert state machine, severity tiering, cooldown logic, and active registry.
+- [x] 09-01: Alert state machine, severity tiering, cooldown logic, and active registry.
 
 ### Phase 10: Surveillance Controller (Deterministic Anomaly Injection)
 **Goal**: Build an interactive injection middleware that modifies raw 5-minute candle data (flash volume surge, price gap, volatility blast, combined) to demonstrate that injected events genuinely travel through the entire detection pipeline without scoring shortcuts.  
@@ -216,7 +216,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 6. Multivariate Isolation Forest Detector & Temporal Validation | mvp | 1/1 | Complete | 2026-09-17 |
 | 7. Transparent 0–100 Risk Scoring & Signal Fusion | mvp | 1/1 | Complete | 2026-09-17 |
 | 8. Regulatory-Oriented Surveillance Explainability | mvp | 1/1 | Complete | 2026-09-17 |
-| 9. Alert Engine & Lifecycle Management | mvp | 0/1 | Not started | - |
+| 9. Alert Engine & Lifecycle Management | mvp | 1/1 | Complete | 2026-09-17 |
 | 10. Surveillance Controller (Deterministic Anomaly Injection) | mvp | 0/1 | Not started | - |
 | 11. Headless Core Decoupling & FastAPI Service | mvp | 0/1 | Not started | - |
 | 12. Streamlit + Plotly Analyst Dashboard & Hackathon Demo | mvp | 0/1 | Not started | - |

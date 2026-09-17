@@ -129,9 +129,9 @@ See full Post-MVP / Production Evolution roadmap section for details:
 | EXPL-01 | Phase 8 | Complete |
 | EXPL-02 | Phase 8 | Complete |
 | EXPL-03 | Phase 8 | Complete |
-| ALRT-01 | Phase 9 | Pending |
-| ALRT-02 | Phase 9 | Pending |
-| ALRT-03 | Phase 9 | Pending |
+| ALRT-01 | Phase 9 | Complete |
+| ALRT-02 | Phase 9 | Complete |
+| ALRT-03 | Phase 9 | Complete |
 | CTRL-01 | Phase 10 | Pending |
 | CTRL-02 | Phase 10 | Pending |
 | CTRL-03 | Phase 10 | Pending |
@@ -154,4 +154,4 @@ See full Post-MVP / Production Evolution roadmap section for details:
 
 ---
 *Requirements defined: 2026-09-15*  
-*Last updated: 2026-09-17 after Phase 8 completion*
+*Last updated: 2026-09-17 after Phase 9 completion*

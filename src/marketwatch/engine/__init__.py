@@ -1,5 +1,11 @@
 """Engine package for MarketWatch AI."""
 
+from marketwatch.alert_engine import (
+    AlertEngine,
+    AlertEvent,
+    AlertState,
+    SurveillanceAlert,
+)
 from marketwatch.detectors import (
     EWMADetector,
     ZScoreDetector,
@@ -27,6 +33,9 @@ from marketwatch.risk import RiskAssessment, RiskContribution, RiskScorer, RiskS
 
 __all__ = [
     "EXPLANATION_DISCLAIMER",
+    "AlertEngine",
+    "AlertEvent",
+    "AlertState",
     "BaselineStats",
     "EWMADetector",
     "ExplainabilityEngine",
@@ -40,6 +49,7 @@ __all__ = [
     "RiskContribution",
     "RiskScorer",
     "RiskSeverity",
+    "SurveillanceAlert",
     "SurveillanceExplanation",
     "TODBaselineEngine",
     "TemporalSplit",

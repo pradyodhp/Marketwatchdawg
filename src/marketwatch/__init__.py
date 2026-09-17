@@ -1,5 +1,11 @@
 """MarketWatch AI — Explainable Real-Time Market Surveillance."""
 
+from marketwatch.alert_engine import (
+    AlertEngine,
+    AlertEvent,
+    AlertState,
+    SurveillanceAlert,
+)
 from marketwatch.detectors import (
     EWMADetector,
     ZScoreDetector,
@@ -30,6 +36,9 @@ __version__ = "0.1.0"
 
 __all__ = [
     "EXPLANATION_DISCLAIMER",
+    "AlertEngine",
+    "AlertEvent",
+    "AlertState",
     "AnomalySeverity",
     "AnomalySignal",
     "BaselineStats",
@@ -45,6 +54,7 @@ __all__ = [
     "RiskContribution",
     "RiskScorer",
     "RiskSeverity",
+    "SurveillanceAlert",
     "SurveillanceExplanation",
     "TODBaselineEngine",
     "TemporalSplit",
