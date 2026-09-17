@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-09-15)
 
 **Core value:** Empower market surveillance analysts with immediate, explainable, and statistically grounded intelligence on what is abnormal about a stock right now, how abnormal it is, and why it was flagged — without black-box opacity or unsubstantiated claims of manipulation.  
-**Current focus:** Phase 9: Alert Engine & Lifecycle Management
+**Current focus:** Phase 10: Surveillance Controller
 
 ## Current Position
 
-Phase: 9 of 12 (Alert Engine & Lifecycle Management) Complete
-Plan: 1 of 1 in Phase 9 complete (09-01)
-Status: Phase 9 Complete (Ready for Phase 10)
-Last activity: 2026-09-17 — Phase 9 executed: deterministic alert identity, NEW/ACKNOWLEDGED/RESOLVED lifecycle, cooldown handling, and active registry.
+Phase: 10 of 12 (Surveillance Controller) Complete
+Plan: 1 of 1 in Phase 10 complete (10-01)
+Status: Phase 10 Complete (Ready for Phase 11)
+Last activity: 2026-09-17 — Phase 10 executed: deterministic raw-candle volume injection and genuine end-to-end surveillance orchestration.
 
-Progress: [█████████░] 75%
+Progress: [██████████] 83%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 9
+- Total plans completed: 10
 - Average duration: ~30 min
 - Total execution time: 1.75 hours
 
@@ -36,9 +36,10 @@ Progress: [█████████░] 75%
 | 7. Risk Scoring & Signal Fusion | 1/1 | 1 | - |
 | 8. Regulatory Explainability | 1/1 | 1 | - |
 | 9. Alert Engine & Lifecycle | 1/1 | 1 | - |
+| 10. Surveillance Controller | 1/1 | 1 | - |
 
 **Recent Trend:**
-- Last 5 plans: 05-01, 06-01, 07-01, 08-01, 09-01
+- Last 5 plans: 06-01, 07-01, 08-01, 09-01, 10-01
 - Trend: Fast & Stable
 
 *Updated after each plan completion*
@@ -78,4 +79,4 @@ None yet.
  
 Last session: 2026-09-16 23:27 IST
 Stopped at: Phase 3 executed and verified (Plan 03-01 complete, 94/94 tests passing)
-Next step: Phase 10: Surveillance Controller (`/gsd-plan-phase 10`)
+Next step: Phase 11: Headless Core Decoupling & FastAPI Service (`/gsd-plan-phase 11`)
