@@ -123,9 +123,9 @@ See full Post-MVP / Production Evolution roadmap section for details:
 | ML-01 | Phase 6 | Complete |
 | ML-02 | Phase 6 | Complete |
 | ML-03 | Phase 6 | Complete |
-| FUSE-01 | Phase 7 | Pending |
-| FUSE-02 | Phase 7 | Pending |
-| FUSE-03 | Phase 7 | Pending |
+| FUSE-01 | Phase 7 | Complete |
+| FUSE-02 | Phase 7 | Complete |
+| FUSE-03 | Phase 7 | Complete |
 | EXPL-01 | Phase 8 | Pending |
 | EXPL-02 | Phase 8 | Pending |
 | EXPL-03 | Phase 8 | Pending |
