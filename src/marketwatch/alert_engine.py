@@ -199,5 +199,9 @@ class AlertEngine:
         """Return unresolved alerts in stable order."""
         return tuple(alert for alert in self.all() if alert.state is not AlertState.RESOLVED)
 
+    def clear(self) -> None:
+        """Clear the in-memory registry for a deterministic replay reset."""
+        self._alerts.clear()
+
 
 __all__ = ["AlertEngine", "AlertEvent", "AlertState", "SurveillanceAlert"]

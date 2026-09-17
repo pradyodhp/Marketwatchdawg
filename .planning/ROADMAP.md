@@ -20,7 +20,7 @@ MarketWatch AI is an explainable, real-time market surveillance and behavioral a
 - [x] **Phase 8: Regulatory-Oriented Surveillance Explainability** - Generate lightweight, deterministic evidence summaries citing exact feature deviations, sector context, and mandatory non-manipulation disclaimers.
 - [x] **Phase 9: Alert Engine & Lifecycle Management** - Implement alert severity tiers (LOW/MED/HIGH/CRIT), per-ticker cooldown windows, and active queryable alert registry.
 - [x] **Phase 10: Surveillance Controller (Deterministic Anomaly Injection)** - Build interactive middleware injecting raw candle distortions into the stream to verify genuine pipeline detection without shortcuts.
-- [ ] **Phase 11: Headless Core Decoupling & FastAPI Service** - Ensure core engine is completely independent, wrapped cleanly by FastAPI REST routes exposing quality metadata and alert feeds with Pydantic v2 schemas.
+- [x] **Phase 11: Headless Core Decoupling & FastAPI Service** - Ensure core engine is completely independent, wrapped cleanly by FastAPI REST routes exposing quality metadata and alert feeds with Pydantic v2 schemas.
 - [ ] **Phase 12: Streamlit + Plotly Analyst Dashboard & Hackathon Demo** - Deliver a responsive surveillance UI with active alert feed, multi-track Plotly charts, data quality indicators, and the presenter Surveillance Controller.
 
 ---
@@ -182,7 +182,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 11-01: Headless engine decoupling verification, FastAPI service integration, quality metadata route, and API tests.
+- [x] 11-01: Headless engine decoupling verification, FastAPI service integration, quality metadata route, and API tests.
 
 ### Phase 12: Streamlit + Plotly Analyst Dashboard & Hackathon Demo
 **Goal**: Build a responsive Streamlit analyst workstation (pure presentation layer) featuring live alert tables, interactive Plotly WebGL candlestick/volume/volatility charts, dataset quality indicators, deep-dive explanation panels, and the presenter Surveillance Controller.  
@@ -218,7 +218,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 8. Regulatory-Oriented Surveillance Explainability | mvp | 1/1 | Complete | 2026-09-17 |
 | 9. Alert Engine & Lifecycle Management | mvp | 1/1 | Complete | 2026-09-17 |
 | 10. Surveillance Controller (Deterministic Anomaly Injection) | mvp | 1/1 | Complete | 2026-09-17 |
-| 11. Headless Core Decoupling & FastAPI Service | mvp | 0/1 | Not started | - |
+| 11. Headless Core Decoupling & FastAPI Service | mvp | 1/1 | Complete | 2026-09-17 |
 | 12. Streamlit + Plotly Analyst Dashboard & Hackathon Demo | mvp | 0/1 | Not started | - |
 
 ---

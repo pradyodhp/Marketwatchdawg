@@ -125,7 +125,11 @@ class SurveillanceController:
         injection: InjectionConfig | None = None,
     ) -> ControllerResult:
         """Process one chronological batch through the genuine surveillance pipeline."""
-        if self._injection_applied:
+        if (
+            self._injection_applied
+            and injection is not None
+            and batch.timestamp == injection.target_timestamp
+        ):
             raise ValueError("controller accepts only one injection per replay")
         injection_result = self.inject(batch, injection)
         if injection_result.applied:
@@ -195,6 +199,13 @@ class SurveillanceController:
         """Process batches in chronological order without future-data access."""
         ordered = sorted(batches, key=lambda item: (item.timestamp, item.slot_index))
         return [self.process_batch(batch, injection=injection) for batch in ordered]
+
+    def reset(self) -> None:
+        """Reset controller state and its in-memory alert registry."""
+        self._feature_history.clear()
+        self._previous_candles.clear()
+        self._injection_applied = False
+        self.alert_engine.clear()
 
 
 __all__ = [

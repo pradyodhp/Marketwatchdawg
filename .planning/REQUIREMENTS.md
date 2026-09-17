@@ -135,9 +135,9 @@ See full Post-MVP / Production Evolution roadmap section for details:
 | CTRL-01 | Phase 10 | Complete |
 | CTRL-02 | Phase 10 | Complete |
 | CTRL-03 | Phase 10 | Complete |
-| API-01 | Phase 11 | Pending |
-| API-02 | Phase 11 | Pending |
-| API-03 | Phase 11 | Pending |
+| API-01 | Phase 11 | Complete |
+| API-02 | Phase 11 | Complete |
+| API-03 | Phase 11 | Complete |
 | DASH-01 | Phase 12 | Pending |
 | DASH-02 | Phase 12 | Pending |
 | DASH-03 | Phase 12 | Pending |
@@ -154,4 +154,4 @@ See full Post-MVP / Production Evolution roadmap section for details:
 
 ---
 *Requirements defined: 2026-09-15*  
-*Last updated: 2026-09-17 after Phase 10 completion*
+*Last updated: 2026-09-17 after Phase 11 completion*
