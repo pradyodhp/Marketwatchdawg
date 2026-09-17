@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-09-15)
 
 **Core value:** Empower market surveillance analysts with immediate, explainable, and statistically grounded intelligence on what is abnormal about a stock right now, how abnormal it is, and why it was flagged — without black-box opacity or unsubstantiated claims of manipulation.  
-**Current focus:** Phase 11: Headless Core Decoupling & FastAPI Service
+**Current focus:** Phase 12: Streamlit + Plotly Analyst Dashboard & Hackathon Demo
 
 ## Current Position
 
-Phase: 11 of 12 (Headless Core Decoupling & FastAPI Service) Complete
-Plan: 1 of 1 in Phase 11 complete (11-01)
-Status: Phase 11 Complete (Ready for Phase 12)
-Last activity: 2026-09-17 — Phase 11 executed: thin FastAPI service over the headless replay, surveillance controller, quality metadata, and alert registry.
+Phase: 12 of 12 (Streamlit + Plotly Analyst Dashboard & Hackathon Demo) Complete
+Plan: 1 of 1 in Phase 12 complete (12-01)
+Status: Phase 12 Complete
+Last activity: 2026-09-17 — Phase 12 executed: thin Streamlit/Plotly dashboard over the FastAPI service with explicit unavailable states and backend-only analytical values.
 
-Progress: [██████████] 92%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 11
+- Total plans completed: 12
 - Average duration: ~30 min
 - Total execution time: 1.75 hours
 
@@ -38,9 +38,10 @@ Progress: [██████████] 92%
 | 9. Alert Engine & Lifecycle | 1/1 | 1 | - |
 | 10. Surveillance Controller | 1/1 | 1 | - |
 | 11. FastAPI Service | 1/1 | 1 | - |
+| 12. Streamlit + Plotly Dashboard | 1/1 | 1 | - |
 
 **Recent Trend:**
-- Last 5 plans: 07-01, 08-01, 09-01, 10-01, 11-01
+- Last 5 plans: 08-01, 09-01, 10-01, 11-01, 12-01
 - Trend: Fast & Stable
 
 *Updated after each plan completion*

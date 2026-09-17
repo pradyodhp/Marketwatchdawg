@@ -69,10 +69,10 @@
 
 ### Streamlit + Plotly Analyst Dashboard
 
-- [ ] **DASH-01**: User can view a real-time surveillance dashboard with active alert feed, severity badges, replay status, and dataset quality/coverage metadata.
-- [ ] **DASH-02**: User can inspect interactive Plotly charts (candlesticks, volume bars, volatility bands, and anomaly markers) for any selected stock.
-- [ ] **DASH-03**: User can view structured evidence breakdowns and natural language explanations with the non-manipulation disclaimer.
-- [ ] **DASH-04**: Presenter can operate the interactive Surveillance Controller panel to inject anomalies and observe live alert generation.
+- [x] **DASH-01**: User can view a real-time surveillance dashboard with active alert feed, severity badges, replay status, and dataset quality/coverage metadata.
+- [x] **DASH-02**: User can inspect backend-provided interactive Plotly charts and explicit unavailable states where the current API lacks historical series.
+- [x] **DASH-03**: User can view structured evidence breakdowns and natural language explanations with the non-manipulation disclaimer.
+- [x] **DASH-04**: Presenter can operate the interactive Surveillance Controller panel to inject anomalies and observe live alert generation.
 
 ### Testing & Verification
 
@@ -138,10 +138,10 @@ See full Post-MVP / Production Evolution roadmap section for details:
 | API-01 | Phase 11 | Complete |
 | API-02 | Phase 11 | Complete |
 | API-03 | Phase 11 | Complete |
-| DASH-01 | Phase 12 | Pending |
-| DASH-02 | Phase 12 | Pending |
-| DASH-03 | Phase 12 | Pending |
-| DASH-04 | Phase 12 | Pending |
+| DASH-01 | Phase 12 | Complete |
+| DASH-02 | Phase 12 | Complete |
+| DASH-03 | Phase 12 | Complete |
+| DASH-04 | Phase 12 | Complete |
 | TEST-01 | Phase 4 | Pending |
 | TEST-02 | Phase 6 | Complete |
 | TEST-03 | Phase 4 | Pending |
@@ -154,4 +154,4 @@ See full Post-MVP / Production Evolution roadmap section for details:
 
 ---
 *Requirements defined: 2026-09-15*  
-*Last updated: 2026-09-17 after Phase 11 completion*
+*Last updated: 2026-09-17 after Phase 12 completion*

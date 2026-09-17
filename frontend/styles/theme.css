@@ -1,0 +1,22 @@
+:root {
+  --bg: #0b1220;
+  --panel: #111827;
+  --border: #263449;
+  --text: #dbe4f0;
+  --muted: #8fa3ba;
+}
+
+html, body, [data-testid="stAppViewContainer"] {
+  background: var(--bg);
+  color: var(--text);
+}
+
+[data-testid="stMetric"] {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  padding: 0.8rem;
+}
+
+code, [data-testid="stMetricValue"] {
+  font-family: "JetBrains Mono", "Cascadia Code", monospace;
+}
