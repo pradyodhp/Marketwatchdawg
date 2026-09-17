@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import math
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from datetime import datetime
 from enum import Enum
 from typing import Any
@@ -15,6 +15,37 @@ from marketwatch.models.signals import AnomalySignal
 from marketwatch.risk import RiskAssessment, RiskSeverity
 
 EXPLANATION_DISCLAIMER = "Unusual activity does not establish manipulation, fraud, misconduct, or intent."
+
+
+class _DeepFrozenDict(dict[str, Any]):
+    """JSON-compatible dictionary that recursively rejects mutation."""
+
+    def __init__(self, value: Mapping[str, Any] | None = None) -> None:
+        dict.__init__(self, {key: _deep_freeze(item) for key, item in (value or {}).items()})
+
+    @staticmethod
+    def _immutable(*args: Any, **kwargs: Any) -> None:
+        raise TypeError("immutable explanation metadata cannot be mutated")
+
+    __delitem__ = __setitem__ = _immutable
+    clear = pop = popitem = setdefault = update = _immutable
+
+    def __ior__(self, value: Mapping[str, Any]):
+        self._immutable(value)
+        return self
+
+
+def _deep_freeze(value: Any) -> Any:
+    """Recursively convert JSON-like containers to immutable equivalents."""
+    if isinstance(value, Mapping):
+        return _DeepFrozenDict(value)
+    if isinstance(value, list):
+        return tuple(_deep_freeze(item) for item in value)
+    if isinstance(value, tuple):
+        return tuple(_deep_freeze(item) for item in value)
+    if isinstance(value, set):
+        return frozenset(_deep_freeze(item) for item in value)
+    return value
 
 
 class ExplanationFactorType(str, Enum):
@@ -45,6 +76,11 @@ class ExplanationFactor(BaseModel):
     reason: str | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
 
+    @field_validator("metadata", mode="after")
+    @classmethod
+    def freeze_metadata(cls, value: dict[str, Any]) -> dict[str, Any]:
+        return _deep_freeze(value)
+
     @model_validator(mode="after")
     def validate_finite_values(self) -> ExplanationFactor:
         for name in ("value", "threshold", "normalized_evidence", "weighted_contribution"):
@@ -72,6 +108,11 @@ class SurveillanceExplanation(BaseModel):
     reason: str | None = None
     disclaimer: str = EXPLANATION_DISCLAIMER
     metadata: dict[str, Any] = Field(default_factory=dict)
+
+    @field_validator("metadata", mode="after")
+    @classmethod
+    def freeze_metadata(cls, value: dict[str, Any]) -> dict[str, Any]:
+        return _deep_freeze(value)
 
     @field_validator("timestamp")
     @classmethod
@@ -141,6 +182,8 @@ class ExplainabilityEngine:
             if feature is None:
                 continue
             value = getattr(feature, feature_name, None)
+            if value is None:
+                value = feature.raw_features.get(feature_name)
             if not isinstance(value, (int, float)) or not math.isfinite(float(value)):
                 continue
             factors.append(

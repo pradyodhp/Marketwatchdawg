@@ -215,7 +215,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 5. Statistical Anomaly Detector (Z-Scores & EWMA) | mvp | 1/1 | Complete | 2026-09-17 |
 | 6. Multivariate Isolation Forest Detector & Temporal Validation | mvp | 1/1 | Complete | 2026-09-17 |
 | 7. Transparent 0–100 Risk Scoring & Signal Fusion | mvp | 1/1 | Complete | 2026-09-17 |
-| 8. Regulatory-Oriented Surveillance Explainability | mvp | 0/1 | Not started | - |
+| 8. Regulatory-Oriented Surveillance Explainability | mvp | 1/1 | Complete | 2026-09-17 |
 | 9. Alert Engine & Lifecycle Management | mvp | 0/1 | Not started | - |
 | 10. Surveillance Controller (Deterministic Anomaly Injection) | mvp | 0/1 | Not started | - |
 | 11. Headless Core Decoupling & FastAPI Service | mvp | 0/1 | Not started | - |

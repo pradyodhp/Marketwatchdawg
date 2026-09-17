@@ -19,7 +19,7 @@ Progress: [████████░░] 67%
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
+- Total plans completed: 8
 - Average duration: ~30 min
 - Total execution time: 1.75 hours
 
@@ -30,9 +30,14 @@ Progress: [████████░░] 67%
 | 1. Scaffolding & NIFTY 100 | 1/1 | 15m | 15m |
 | 2. Free Data Ingestion | 1/1 | 75m | 75m |
 | 3. Replay Engine | 1/1 | 15m | 15m |
+| 4. Feature Engineering & TOD Baselines | 1/1 | 1 | - |
+| 5. Statistical Anomaly Detection | 1/1 | 1 | - |
+| 6. Isolation Forest & Temporal Validation | 1/1 | 1 | - |
+| 7. Risk Scoring & Signal Fusion | 1/1 | 1 | - |
+| 8. Regulatory Explainability | 1/1 | 1 | - |
 
 **Recent Trend:**
-- Last 5 plans: 01-01, 02-01, 03-01
+- Last 5 plans: 04-01, 05-01, 06-01, 07-01, 08-01
 - Trend: Fast & Stable
 
 *Updated after each plan completion*

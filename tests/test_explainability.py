@@ -105,6 +105,54 @@ def test_detector_and_feature_factors_are_explicit_and_ordered():
     assert any("Isolation Forest identified" in factor.detail for factor in explanation.factors)
 
 
+def test_custom_raw_feature_referenced_by_signal_is_explained():
+    signal = _signal("ZScoreDetector", 2.0, 3.0, feature="custom_metric")
+    feature = _feature().model_copy(update={"raw_features": {"custom_metric": 7.5}})
+    assessment = RiskScorer().score([signal])
+
+    explanation = ExplainabilityEngine().explain(assessment, signals=[signal], feature=feature)
+
+    custom = next(
+        factor for factor in explanation.factors
+        if factor.factor_type is ExplanationFactorType.FEATURE
+        and factor.feature_name == "custom_metric"
+    )
+    assert custom.value == 7.5
+    assert "custom_metric" in explanation.contributing_features
+
+
+def test_factor_and_explanation_metadata_are_deeply_immutable():
+    signal = _signal("ZScoreDetector", 3.0, 3.0)
+    assessment = RiskScorer().score([signal])
+    explanation = ExplainabilityEngine().explain(assessment, signals=[signal])
+    factor = next(
+        factor for factor in explanation.factors
+        if factor.factor_type is ExplanationFactorType.DETECTOR
+    )
+
+    for metadata, key, nested_key in (
+        (factor.metadata, "source", None),
+        (explanation.metadata, "weights", "ZScoreDetector"),
+    ):
+        try:
+            metadata[key] = "changed"
+        except TypeError:
+            pass
+        else:
+            raise AssertionError("top-level metadata mutation was allowed")
+        if nested_key is not None:
+            try:
+                metadata[key][nested_key] = 0.0
+            except TypeError:
+                pass
+            else:
+                raise AssertionError("nested metadata mutation was allowed")
+
+    assert factor.metadata["source"] == "ZScoreDetector"
+    assert explanation.metadata["weights"]["ZScoreDetector"] == 0.35
+    assert explanation.model_dump_json()
+
+
 def test_agreement_bonus_and_score_composition_are_explained():
     signals = [
         _signal("ZScoreDetector", 3.0, 3.0),
