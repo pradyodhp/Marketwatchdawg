@@ -31,6 +31,31 @@ def test_api_client_sends_replay_injection(monkeypatch):
     assert seen["json"] == payload
 
 
+def test_alert_filters_omit_empty_values(monkeypatch):
+    calls = []
+
+    def fake_get(url, **kwargs):
+        calls.append(kwargs.get("params"))
+        return httpx.Response(
+            200,
+            request=httpx.Request("GET", url),
+            json=[],
+        )
+
+    monkeypatch.setattr(httpx, "get", fake_get)
+    client = APIClient("http://example.test")
+    client.alerts()
+    client.alerts(symbol="RELIANCE")
+    client.alerts(state="CRITICAL")
+    client.alerts(symbol="RELIANCE", state="NEW")
+    assert calls == [
+        None,
+        {"symbol": "RELIANCE"},
+        {"state": "CRITICAL"},
+        {"symbol": "RELIANCE", "state": "NEW"},
+    ]
+
+
 def test_navigation_pages_are_explicit_and_stable():
     assert PAGES == (
         "Surveillance Overview",

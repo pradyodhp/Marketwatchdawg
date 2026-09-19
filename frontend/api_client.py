@@ -30,7 +30,12 @@ class APIClient:
         return self._get("/stocks")
 
     def alerts(self, symbol: str | None = None, state: str | None = None) -> list[dict[str, Any]]:
-        return self._get("/alerts", symbol=symbol, state=state)
+        params = {
+            key: value
+            for key, value in {"symbol": symbol, "state": state}.items()
+            if value is not None and value.strip()
+        }
+        return self._get("/alerts", **params)
 
     def replay(self, action: str = "step", injection: dict[str, Any] | None = None) -> dict[str, Any]:
         response = httpx.post(

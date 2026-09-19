@@ -18,18 +18,29 @@ theme_path = Path(__file__).parent / "styles" / "theme.css"
 st.markdown(f"<style>{theme_path.read_text(encoding='utf-8')}</style>", unsafe_allow_html=True)
 
 client = APIClient()
-try:
-    health = client.health()
-    quality = client.quality()
-    stocks = client.stocks()
-    alerts = client.alerts()
-    connected = health.get("status") == "ok"
-except (httpx.HTTPError, OSError, ValueError) as exc:
-    connected = False
-    quality = None
-    stocks = None
-    alerts = None
-    st.error(f"Backend disconnected: {exc}")
+
+
+def load_endpoint(name: str, loader, default):
+    try:
+        return loader(), None
+    except (httpx.HTTPError, OSError, ValueError) as exc:
+        return default, f"{name} unavailable: {exc}"
+
+
+health, health_error = load_endpoint("Health", client.health, {})
+connected = health.get("status") == "ok"
+if health_error:
+    st.error(f"Backend disconnected: {health_error}")
+
+quality, quality_error = load_endpoint("Quality metadata", client.quality, None)
+stocks, stocks_error = load_endpoint("Monitored securities", client.stocks, None)
+alerts, alerts_error = load_endpoint("Alerts", client.alerts, None)
+for endpoint_error in (quality_error, stocks_error, alerts_error):
+    if endpoint_error:
+        st.warning(endpoint_error)
+
+if connected:
+    st.success("Backend health check passed.")
 
 render_header(connected, quality_available=quality is not None)
 st.sidebar.title("NAVIGATION")
