@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import httpx
 import streamlit as st
 
 from frontend.components.charts import render_price_chart
@@ -14,5 +15,10 @@ def render(client, symbol: str | None) -> None:
         return
     st.header(f"Security Investigation: {symbol}")
     st.caption("All analytical values are backend-owned. No local detector is run.")
-    render_price_chart()
+    try:
+        series = client.candles(symbol)
+    except (httpx.HTTPError, OSError, ValueError) as exc:
+        st.warning(f"Candle series unavailable: {exc}")
+        series = None
+    render_price_chart(series)
     st.info("Detector, baseline, market-context, and sector-context series are unavailable in the current API contract.")

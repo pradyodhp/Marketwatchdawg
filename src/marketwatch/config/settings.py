@@ -31,23 +31,36 @@ class RiskThresholds(BaseModel):
     critical: float = 85.0
 
 
-class RiskWeights(BaseModel):
-    """Component fusion weights for final risk scoring."""
-
-    model_config = ConfigDict(frozen=True, extra="forbid")
-
-    stat_weight: float = 0.40
-    ml_weight: float = 0.35
-    context_weight: float = 0.25
-
-
 class RiskScoringSettings(BaseModel):
-    """Risk scoring engine configuration."""
+    """Risk scoring engine configuration.
+
+    ``weights`` maps detector name to fusion weight; unknown detectors are
+    ignored by the scorer and missing detectors are renormalized out.
+    """
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
-    weights: RiskWeights = Field(default_factory=RiskWeights)
+    weights: dict[str, float] = Field(
+        default_factory=lambda: {
+            "ZScoreDetector": 0.35,
+            "EWMADetector": 0.25,
+            "IsolationForestDetector": 0.40,
+        }
+    )
     thresholds: RiskThresholds = Field(default_factory=RiskThresholds)
+
+
+class NotificationSettings(BaseModel):
+    """Outbound alert delivery configuration.
+
+    webhook_url can also be set via MARKETWATCH_NOTIFICATIONS__WEBHOOK_URL.
+    Empty URL disables delivery.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    webhook_url: str = ""
+    min_severity: str = "HIGH"
 
 
 class CooldownSettings(BaseModel):
@@ -91,6 +104,7 @@ class Settings(BaseSettings):
     market: MarketSettings = Field(default_factory=MarketSettings)
     risk_scoring: RiskScoringSettings = Field(default_factory=RiskScoringSettings)
     cooldown: CooldownSettings = Field(default_factory=CooldownSettings)
+    notifications: NotificationSettings = Field(default_factory=NotificationSettings)
     replay: ReplaySettings = Field(default_factory=ReplaySettings)
     logging: LoggingSettings = Field(default_factory=LoggingSettings)
 

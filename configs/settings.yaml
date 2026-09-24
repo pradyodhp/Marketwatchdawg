@@ -7,17 +7,25 @@ market:
   slots_per_day: 75
   bar_interval_minutes: 5
 risk_scoring:
+  # Detector fusion weights, keyed by detector name.
   weights:
-    stat_weight: 0.4
-    ml_weight: 0.35
-    context_weight: 0.25
+    ZScoreDetector: 0.35
+    EWMADetector: 0.25
+    IsolationForestDetector: 0.40
   thresholds:
     low: 0.0
     medium: 50.0
     high: 70.0
     critical: 85.0
 cooldown:
+  # Alert cooldown in bars (6 x 5-minute bars = 30 minutes per symbol).
   window_bars: 6
+notifications:
+  # Optional HTTPS webhook for HIGH/CRITICAL alert delivery (Slack, Teams,
+  # Telegram, automation tools). Empty disables delivery.
+  # Can also be set via MARKETWATCH_NOTIFICATIONS__WEBHOOK_URL.
+  webhook_url: ""
+  min_severity: HIGH
 replay:
   default_speed: 1.0
   auto_play: false

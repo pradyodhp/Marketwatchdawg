@@ -85,7 +85,7 @@ class TestSettingsLoader:
         assert settings.market.slots_per_day == 75
         assert settings.market.timezone == "Asia/Kolkata"
         assert settings.risk_scoring.thresholds.critical == 85.0
-        assert settings.risk_scoring.weights.stat_weight == 0.40
+        assert settings.risk_scoring.weights["IsolationForestDetector"] == 0.40
         assert settings.cooldown.window_bars == 6
 
     def test_settings_env_override(self, monkeypatch):

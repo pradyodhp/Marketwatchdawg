@@ -134,6 +134,7 @@ FEATURE_LABELS = {
     "parkinson_volatility": "Parkinson volatility",
     "market_excess_return": "Market excess return",
     "sector_excess_return": "Sector excess return",
+    "buy_sell_pressure": "Buying/selling pressure (order-imbalance proxy)",
     "__multivariate__": "Multivariate feature combination",
 }
 

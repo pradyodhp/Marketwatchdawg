@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import plotly.graph_objects as go
 import streamlit as st
+from plotly.subplots import make_subplots
 
 
 def render_score_chart(alerts: list[dict]) -> None:
@@ -26,5 +27,42 @@ def render_score_chart(alerts: list[dict]) -> None:
     st.plotly_chart(figure, use_container_width=True)
 
 
-def render_price_chart() -> None:
-    st.info("PRICE/OHLCV SERIES UNAVAILABLE: the current API does not expose historical candle data.")
+def render_price_chart(series: dict | None) -> None:
+    """Render a candlestick + volume chart from backend /candles data."""
+    candles = (series or {}).get("candles") or []
+    if not candles:
+        st.info("NO CANDLE DATA AVAILABLE FOR THIS SECURITY")
+        return
+    timestamps = [item["timestamp"] for item in candles]
+    figure = make_subplots(
+        rows=2,
+        cols=1,
+        shared_xaxes=True,
+        row_heights=[0.7, 0.3],
+        vertical_spacing=0.03,
+    )
+    figure.add_trace(
+        go.Candlestick(
+            x=timestamps,
+            open=[item["open"] for item in candles],
+            high=[item["high"] for item in candles],
+            low=[item["low"] for item in candles],
+            close=[item["close"] for item in candles],
+            name="OHLC",
+        ),
+        row=1,
+        col=1,
+    )
+    figure.add_trace(
+        go.Bar(x=timestamps, y=[item["volume"] for item in candles], name="Volume"),
+        row=2,
+        col=1,
+    )
+    figure.update_layout(
+        template="plotly_dark",
+        height=480,
+        title="Price and volume",
+        xaxis_rangeslider_visible=False,
+        showlegend=False,
+    )
+    st.plotly_chart(figure, use_container_width=True)

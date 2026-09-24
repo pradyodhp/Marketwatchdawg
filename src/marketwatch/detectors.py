@@ -60,6 +60,7 @@ class ZScoreDetector:
             "parkinson_volatility",
             "market_excess_return",
             "sector_excess_return",
+            "buy_sell_pressure",
         )
         self.threshold = float(threshold)
         self.min_observations = max(1, int(min_observations))
@@ -178,6 +179,7 @@ class EWMADetector:
             "parkinson_volatility",
             "market_excess_return",
             "sector_excess_return",
+            "buy_sell_pressure",
         )
         self.alpha = max(0.0, min(1.0, float(alpha)))
         self.threshold = float(threshold)

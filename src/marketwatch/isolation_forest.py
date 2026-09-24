@@ -20,6 +20,7 @@ DEFAULT_FEATURE_NAMES = (
     "parkinson_volatility",
     "market_excess_return",
     "sector_excess_return",
+    "buy_sell_pressure",
 )
 
 
