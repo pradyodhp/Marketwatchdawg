@@ -89,6 +89,7 @@ class SurveillanceController:
         explainability_engine: ExplainabilityEngine | None = None,
         alert_engine: AlertEngine | None = None,
         notifier: WebhookNotifier | None = None,
+        iforest_refit_interval: int = 1,
     ) -> None:
         self.feature_pipeline = feature_pipeline or FeaturePipeline()
         self.zscore_detector = zscore_detector or ZScoreDetector()
@@ -98,6 +99,13 @@ class SurveillanceController:
         self.explainability_engine = explainability_engine or ExplainabilityEngine()
         self.alert_engine = alert_engine or AlertEngine(cooldown_minutes=0)
         self.notifier = notifier
+        if iforest_refit_interval < 1:
+            raise ValueError("iforest_refit_interval must be >= 1")
+        # Walk-forward Isolation Forest: refit on strictly-prior history every
+        # `iforest_refit_interval` batches (1 = every batch, the strictest and
+        # slowest variant).
+        self.iforest_refit_interval = int(iforest_refit_interval)
+        self._iforest_batches_since_fit: int | None = None
         self._feature_history: list[FeatureSet] = []
         self._previous_candles: dict[str, Candle] = {}
         self._injection_applied = False
@@ -158,21 +166,35 @@ class SurveillanceController:
         current_features = tuple(features.values())
         self._feature_history.extend(current_features)
 
+        current_keys = {(feature.symbol, feature.timestamp) for feature in current_features}
         stat_signals = tuple(
             signal
             for detector in (self.zscore_detector, self.ewma_detector)
             for signal in detector.detect(self._feature_history)
-            if any(
-                signal.symbol == feature.symbol and signal.timestamp == feature.timestamp
-                for feature in current_features
-            )
+            if (signal.symbol, signal.timestamp) in current_keys
         )
         ml_signals: tuple[AnomalySignal, ...] = ()
         if current_features:
             try:
-                ml_signals = tuple(
-                    self.isolation_forest_detector.fit_score(prior_history, list(current_features))
+                since = self._iforest_batches_since_fit
+                refit = (
+                    since is None
+                    or self.iforest_refit_interval <= 1
+                    or since + 1 >= self.iforest_refit_interval
+                    or not self.isolation_forest_detector.fitted
                 )
+                if refit:
+                    ml_signals = tuple(
+                        self.isolation_forest_detector.fit_score(
+                            prior_history, list(current_features)
+                        )
+                    )
+                    self._iforest_batches_since_fit = 0
+                else:
+                    ml_signals = tuple(
+                        self.isolation_forest_detector.score(list(current_features))
+                    )
+                    self._iforest_batches_since_fit = since + 1
             except (ValueError, RuntimeError) as exc:
                 logger.warning("isolation forest scoring skipped for this batch: %s", exc)
                 ml_signals = tuple(
@@ -278,6 +300,7 @@ class SurveillanceController:
         self._previous_candles.clear()
         self._injection_applied = False
         self._notified_alert_ids.clear()
+        self._iforest_batches_since_fit = None
         self.alert_engine.clear()
 
 

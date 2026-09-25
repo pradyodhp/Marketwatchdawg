@@ -4,17 +4,31 @@ from __future__ import annotations
 
 import io
 import logging
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any, Literal
+from zoneinfo import ZoneInfo
 
 import pandas as pd
+import yaml
 from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field
 
-from marketwatch.alert_engine import AlertEngine
-from marketwatch.config.settings import load_settings
+from marketwatch.alert_engine import AlertEngine, AlertState
+from marketwatch.config.settings import (
+    CooldownSettings,
+    DetectorSettings,
+    NotificationSettings,
+    ReplaySettings,
+    RiskScoringSettings,
+    load_settings,
+)
+from marketwatch.config.universe import load_universe_config
 from marketwatch.controller import InjectionConfig, SurveillanceController
+from marketwatch.detectors import EWMADetector, ZScoreDetector
 from marketwatch.ingestion.parquet_store import (
     read_quality_metadata,
     write_quality_metadata,
@@ -26,9 +40,11 @@ from marketwatch.notifications import WebhookNotifier
 from marketwatch.providers.parquet_provider import ParquetDataProvider
 from marketwatch.replay.engine import ReplayEngine
 from marketwatch.risk import RiskScorer
+from marketwatch.scores import DetectionCache, cache_key, run_detection
 
 logger = logging.getLogger(__name__)
 
+IST = ZoneInfo("Asia/Kolkata")
 
 class HealthResponse(BaseModel):
     """Deterministic service health response."""
@@ -148,6 +164,90 @@ class IngestResponse(BaseModel):
     date_range: tuple[str, str]
 
 
+class SettingsUpdate(BaseModel):
+    """Partial settings update; each supplied section replaces that section."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    risk_scoring: RiskScoringSettings | None = None
+    detectors: DetectorSettings | None = None
+    cooldown: CooldownSettings | None = None
+    notifications: NotificationSettings | None = None
+    replay: ReplaySettings | None = None
+
+
+class SettingsResponse(BaseModel):
+    """Current surveillance settings as editable via PUT /settings."""
+
+    risk_scoring: dict[str, Any]
+    detectors: dict[str, Any]
+    cooldown: dict[str, Any]
+    notifications: dict[str, Any]
+    replay: dict[str, Any]
+
+
+class ScoreBar(BaseModel):
+    """One bar of candles plus detector evidence and fused risk."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    t: str
+    slot: int
+    o: float
+    h: float
+    l: float
+    c: float
+    v: float
+    log_return: float
+    volume_ratio: float
+    park: float
+    pressure: float
+    z_ret: float
+    z_vol: float
+    z_pressure: float
+    ewma_dev: float
+    if_score: float
+    risk: float
+    severity: str
+    valid: bool
+    contrib: dict[str, float]
+    agreement: float
+
+
+class ScoresResponse(BaseModel):
+    """Per-symbol bar series with detector evidence from the detection run."""
+
+    symbols: dict[str, list[ScoreBar]]
+    symbol_count: int
+    batches: int
+    elapsed_ms: int
+
+
+class DetectResponse(BaseModel):
+    """Summary of the (possibly cached) full-history detection run."""
+
+    symbols: int
+    batches: int
+    alerts: int
+    elapsed_ms: int
+    cached: bool
+
+
+class AlertActionRequest(BaseModel):
+    """Analyst lifecycle action on one alert."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    action: Literal["acknowledge", "escalate", "resolve", "reopen"]
+    note: str | None = Field(default=None, max_length=2000)
+
+
+class UniverseResponse(BaseModel):
+    """Display metadata for known symbols (name/sector/industry)."""
+
+    entries: dict[str, dict[str, str]]
+
+
 def _serialize_alert(alert: Any) -> AlertResponse:
     return AlertResponse(
         alert_id=alert.alert_id,
@@ -174,37 +274,77 @@ class MarketWatchAPI:
         replay: ReplayEngine | None = None,
         controller: SurveillanceController | None = None,
         settings: Any | None = None,
+        config_path: str | Path | None = None,
     ) -> None:
-        self.settings = settings or load_settings()
+        self.config_path = Path(config_path) if config_path is not None else Path(
+            "configs/settings.yaml"
+        )
+        self.settings = settings or load_settings(self.config_path)
         self.curated_dir = Path(self.settings.curated_dir)
         self.provider = provider or ParquetDataProvider(self.curated_dir)
         self.replay = replay
-        if controller is not None:
-            self.controller = controller
-        else:
-            risk = self.settings.risk_scoring
-            cooldown_minutes = (
-                self.settings.cooldown.window_bars * self.settings.market.bar_interval_minutes
-            )
-            notifier = None
-            if self.settings.notifications.webhook_url:
-                notifier = WebhookNotifier(
-                    self.settings.notifications.webhook_url,
-                    min_severity=self.settings.notifications.min_severity,
-                )
-            self.controller = SurveillanceController(
-                risk_scorer=RiskScorer(
-                    detector_weights=risk.weights,
-                    severity_thresholds={
-                        "medium": risk.thresholds.medium,
-                        "high": risk.thresholds.high,
-                        "critical": risk.thresholds.critical,
-                    },
-                ),
-                alert_engine=AlertEngine(cooldown_minutes=cooldown_minutes),
-                notifier=notifier,
-            )
+        self.controller = controller if controller is not None else self._build_controller()
         self.last_result: Any | None = None
+        self.detection_cache = DetectionCache()
+
+    def _build_controller(self) -> SurveillanceController:
+        """Build the surveillance controller from the current settings."""
+        risk = self.settings.risk_scoring
+        cooldown_minutes = (
+            self.settings.cooldown.window_bars * self.settings.market.bar_interval_minutes
+        )
+        notifier = None
+        if self.settings.notifications.webhook_url:
+            notifier = WebhookNotifier(
+                self.settings.notifications.webhook_url,
+                min_severity=self.settings.notifications.min_severity,
+            )
+        detectors = self.settings.detectors
+        return SurveillanceController(
+            zscore_detector=ZScoreDetector(
+                threshold=detectors.zscore_threshold,
+                min_observations=detectors.min_observations,
+            ),
+            ewma_detector=EWMADetector(
+                alpha=detectors.ewma_alpha,
+                threshold=detectors.ewma_threshold,
+            ),
+            risk_scorer=RiskScorer(
+                detector_weights=risk.weights,
+                severity_thresholds={
+                    "medium": risk.thresholds.medium,
+                    "high": risk.thresholds.high,
+                    "critical": risk.thresholds.critical,
+                },
+            ),
+            alert_engine=AlertEngine(cooldown_minutes=cooldown_minutes),
+            notifier=notifier,
+            iforest_refit_interval=detectors.isolation_forest_refit_interval,
+        )
+
+    def reconfigure(self, settings: Any) -> None:
+        """Apply new settings: rebuild controller, reset replay and detection cache."""
+        self.settings = settings
+        self.controller = self._build_controller()
+        self.replay = None
+        self.last_result = None
+        self.detection_cache.clear()
+
+    def settings_payload(self) -> dict[str, Any]:
+        s = self.settings
+        return {
+            "risk_scoring": {
+                "weights": dict(s.risk_scoring.weights),
+                "thresholds": s.risk_scoring.thresholds.model_dump(),
+            },
+            "detectors": s.detectors.model_dump(),
+            "cooldown": {
+                "window_bars": s.cooldown.window_bars,
+                "minutes": s.cooldown.window_bars * s.market.bar_interval_minutes,
+            },
+            "notifications": s.notifications.model_dump(),
+            "replay": s.replay.model_dump(),
+        }
 
     def reload_data(self) -> None:
         """Reload curated data from disk and reset replay/controller state.
@@ -216,6 +356,7 @@ class MarketWatchAPI:
         self.replay = None
         self.controller.reset()
         self.last_result = None
+        self.detection_cache.clear()
 
     def ensure_replay(self, symbols: list[str] | None = None) -> ReplayEngine:
         if self.replay is None:
@@ -224,6 +365,20 @@ class MarketWatchAPI:
             except (FileNotFoundError, ValueError) as exc:
                 raise HTTPException(status_code=503, detail=f"replay unavailable: {exc}") from exc
         return self.replay
+
+
+class SPAStaticFiles(StaticFiles):
+    """StaticFiles with an index.html fallback for client-side routes."""
+
+    async def get_response(self, path: str, scope: dict[str, Any]) -> Any:
+        from starlette.exceptions import HTTPException as StarletteHTTPException
+
+        try:
+            return await super().get_response(path, scope)
+        except StarletteHTTPException as exc:
+            if exc.status_code == 404:
+                return await super().get_response("index.html", scope)
+            raise
 
 
 def create_app(service: MarketWatchAPI | None = None) -> FastAPI:
@@ -235,6 +390,15 @@ def create_app(service: MarketWatchAPI | None = None) -> FastAPI:
         description="Headless deterministic surveillance service for analyst decision support.",
     )
     app.state.marketwatch = runtime
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+        ],
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
     @app.get("/health", response_model=HealthResponse, tags=["system"])
     def health() -> HealthResponse:
@@ -415,6 +579,104 @@ def create_app(service: MarketWatchAPI | None = None) -> FastAPI:
             if (symbol is None or alert.symbol == symbol)
             and (state is None or alert.state.value == state)
         ]
+
+    @app.patch("/alerts/{alert_id}", response_model=AlertResponse, tags=["alerts"])
+    def alert_action(alert_id: str, request: AlertActionRequest) -> AlertResponse:
+        engine = runtime.controller.alert_engine
+        try:
+            alert = engine.update_state(
+                alert_id,
+                request.action,
+                note=request.note,
+                timestamp=datetime.now(IST),
+            )
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail=f"unknown alert: {alert_id}") from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+        return _serialize_alert(alert)
+
+    @app.get("/settings", response_model=SettingsResponse, tags=["settings"])
+    def get_settings() -> SettingsResponse:
+        return SettingsResponse(**runtime.settings_payload())
+
+    @app.put("/settings", response_model=SettingsResponse, tags=["settings"])
+    def put_settings(update: SettingsUpdate) -> SettingsResponse:
+        """Merge supplied sections into configs/settings.yaml and apply them."""
+        config_path = runtime.config_path
+        raw: dict[str, Any] = {}
+        if config_path.is_file():
+            with open(config_path, "r", encoding="utf-8") as handle:
+                raw = yaml.safe_load(handle) or {}
+        for section in ("risk_scoring", "detectors", "cooldown", "notifications", "replay"):
+            value = getattr(update, section)
+            if value is not None:
+                raw[section] = value.model_dump()
+        config_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(config_path, "w", encoding="utf-8") as handle:
+            handle.write("# MarketWatch AI settings (managed; edit here or via PUT /settings)\n")
+            yaml.safe_dump(raw, handle, sort_keys=False)
+        runtime.reconfigure(load_settings(config_path))
+        logger.info("settings updated and applied: %s", update.model_dump(exclude_none=True))
+        return SettingsResponse(**runtime.settings_payload())
+
+    @app.get("/universe", response_model=UniverseResponse, tags=["universe"])
+    def universe() -> UniverseResponse:
+        """Display metadata (name/sector/industry) keyed by symbol and base symbol."""
+        entries: dict[str, dict[str, str]] = {}
+        try:
+            config = load_universe_config(runtime.settings.universe_config_path)
+        except Exception as exc:  # config is optional for custom datasets
+            logger.warning("universe config unavailable: %s", exc)
+            return UniverseResponse(entries={})
+        for equity in config.equities:
+            info = {"name": equity.name, "sector": equity.sector, "industry": equity.industry}
+            entries[equity.symbol] = info
+            entries.setdefault(equity.base_symbol, info)
+        return UniverseResponse(entries=entries)
+
+    @app.post("/detect", response_model=DetectResponse, tags=["detection"])
+    def detect() -> DetectResponse:
+        """Run (or reuse) the full-history detection pass behind /scores + /alerts."""
+        cached = runtime.detection_cache.matches(cache_key(runtime))
+        cache = run_detection(runtime)
+        return DetectResponse(
+            symbols=len(cache.bars),
+            batches=cache.batches,
+            alerts=len(runtime.controller.alert_engine.all()),
+            elapsed_ms=cache.elapsed_ms,
+            cached=cached,
+        )
+
+    @app.get("/scores", response_model=ScoresResponse, tags=["detection"])
+    def scores(
+        symbol: str | None = Query(default=None),
+        limit: int = Query(default=200),
+    ) -> ScoresResponse:
+        """Per-bar candles, detector evidence and risk for chart rendering."""
+        cache = run_detection(runtime)
+        limit = max(1, min(limit, 20000))
+        if symbol is not None:
+            series = cache.bars.get(symbol)
+            if series is None:
+                raise HTTPException(status_code=404, detail=f"unknown symbol: {symbol}")
+            selected = {symbol: series[-limit:]}
+        else:
+            selected = {name: series[-limit:] for name, series in cache.bars.items()}
+        return ScoresResponse(
+            symbols=selected,
+            symbol_count=len(selected),
+            batches=cache.batches,
+            elapsed_ms=cache.elapsed_ms,
+        )
+
+    web_dist = Path(__file__).resolve().parents[2] / "web" / "dist"
+    if (web_dist / "index.html").is_file():
+        app.mount("/app", SPAStaticFiles(directory=str(web_dist), html=True), name="web")
+
+        @app.get("/", include_in_schema=False)
+        def root() -> RedirectResponse:
+            return RedirectResponse(url="/app/")
 
     return app
 

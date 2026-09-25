@@ -63,6 +63,23 @@ class NotificationSettings(BaseModel):
     min_severity: str = "HIGH"
 
 
+class DetectorSettings(BaseModel):
+    """Statistical/ML detector tuning.
+
+    isolation_forest_refit_interval controls walk-forward refit cadence:
+    the model trains only on strictly-prior observations every N batches
+    (1 = every batch, strictest and slowest).
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    zscore_threshold: float = 3.0
+    min_observations: int = 3
+    ewma_alpha: float = 0.3
+    ewma_threshold: float = 2.5
+    isolation_forest_refit_interval: int = 1
+
+
 class CooldownSettings(BaseModel):
     """Alert cooldown parameters."""
 
@@ -103,6 +120,7 @@ class Settings(BaseSettings):
     universe_config_path: str = "configs/universe_nifty100.json"
     market: MarketSettings = Field(default_factory=MarketSettings)
     risk_scoring: RiskScoringSettings = Field(default_factory=RiskScoringSettings)
+    detectors: DetectorSettings = Field(default_factory=DetectorSettings)
     cooldown: CooldownSettings = Field(default_factory=CooldownSettings)
     notifications: NotificationSettings = Field(default_factory=NotificationSettings)
     replay: ReplaySettings = Field(default_factory=ReplaySettings)

@@ -1,3 +1,4 @@
+# MarketWatch AI settings (edit here or via PUT /settings)
 data_dir: data
 curated_dir: data/curated
 metadata_file: data/curated/quality_metadata.json
@@ -17,6 +18,18 @@ risk_scoring:
     medium: 50.0
     high: 70.0
     critical: 85.0
+detectors:
+  # Rolling/time-of-day Z-score: anomaly when |z| >= zscore_threshold, with at
+  # least min_observations prior same-slot observations.
+  zscore_threshold: 3.0
+  min_observations: 3
+  # EWMA: mean update weight (higher = reacts faster) and anomaly threshold.
+  ewma_alpha: 0.3
+  ewma_threshold: 2.5
+  # Walk-forward Isolation Forest refit cadence: retrain on strictly-prior
+  # history every N batches (1 = every batch, strictest and slowest; 8 keeps
+  # an interactive full-history detection run responsive).
+  isolation_forest_refit_interval: 8
 cooldown:
   # Alert cooldown in bars (6 x 5-minute bars = 30 minutes per symbol).
   window_bars: 6
