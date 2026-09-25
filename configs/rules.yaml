@@ -1,0 +1,11 @@
+# MarketWatch AI trigger rules (managed; edit here or via the API/UI)
+# metric options: price_above, price_below, pct_change_up, pct_change_down,
+#                 volume_spike, risk_above, zscore_above, pressure_above, pressure_below
+# symbol: a ticker (RELIANCE) or * for every symbol
+- id: rule-example-reliance-1200
+  symbol: RELIANCE
+  metric: price_above
+  threshold: 1200.0
+  note: breakout watch
+  enabled: true
+  created_at: '2026-09-25T12:59:00+05:30'

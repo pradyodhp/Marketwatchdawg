@@ -70,3 +70,35 @@ export type ApiSettings = {
   notifications: { webhook_url: string; min_severity: string };
   replay: { default_speed: number; auto_play: boolean };
 };
+
+export type ApiRule = {
+  id: string; symbol: string; metric: string; threshold: number;
+  note: string; enabled: boolean; created_at: string;
+};
+
+export type ApiGuidance = {
+  id: string; rule_id: string; symbol: string; timestamp: string;
+  metric: string; threshold: number; observed: number; close: number;
+  pct_change: number; volume_ratio: number | null; risk: number | null;
+  zscore: number | null; pressure: number | null;
+  title: string; suggestion: string; note: string; disclaimer: string;
+};
+
+export type LiveStatus = {
+  running: boolean; interval_sec: number; source: string; delay_note: string;
+  available: boolean; last_poll: string | null;
+  last_summary: { new_bars?: number; new_alerts?: number; guidance_fired?: number; polled_at?: string };
+  errors: string[];
+};
+
+export const RULE_METRICS: { id: string; label: string; hint: string }[] = [
+  { id: 'price_above', label: 'Price rises above', hint: 'Rs level' },
+  { id: 'price_below', label: 'Price falls below', hint: 'Rs level' },
+  { id: 'pct_change_up', label: 'Jumps up in one bar', hint: '% move' },
+  { id: 'pct_change_down', label: 'Drops in one bar', hint: '% move' },
+  { id: 'volume_spike', label: 'Volume spike', hint: 'x average' },
+  { id: 'risk_above', label: 'Fused risk at least', hint: '0-100' },
+  { id: 'zscore_above', label: 'Z-score beyond', hint: 'sigma' },
+  { id: 'pressure_above', label: 'Buy pressure above', hint: '-1..1' },
+  { id: 'pressure_below', label: 'Sell pressure below', hint: '-1..1' },
+];

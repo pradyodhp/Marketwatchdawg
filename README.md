@@ -367,3 +367,32 @@ The classic Streamlit dashboard (`frontend/`) still works unchanged:
 ```bash
 streamlit run frontend/app.py
 ```
+
+---
+
+## 📡 Live Data + Trigger Rules & Guidance
+
+The app can poll **free live-ish market data** and turn your own thresholds
+into plain-English guidance:
+
+- **Source:** Yahoo Finance via `yfinance` - free, no API key. Free Yahoo data
+  is officially delayed, usually up to ~15 minutes for NSE (observed ~1-2
+  minutes in testing). True real-time NSE feeds are paid only (NSE Data &
+  Analytics, broker APIs like Zerodha Kite or Upstox).
+- **Polling:** `POST /live/start` (default every 5 min), `POST /live/stop`,
+  `POST /live/poll` for a single cycle, `GET /live/status` for source, delay
+  note and last-poll summary. New bars are appended to the curated Parquet
+  store and streamed through the real detection pipeline (Z-score, EWMA,
+  walk-forward Isolation Forest), so live bars raise normal alerts.
+- **Trigger rules:** `GET/POST/DELETE /rules` (persisted to
+  `configs/rules.yaml`). Metrics: price above/below, % jump/drop in one bar,
+  volume spike (x average), fused risk, Z-score, buy/sell pressure. `*` matches
+  every symbol.
+- **Guidance:** `GET /guidance` returns fired rules with the metric evidence
+  (price, % move, volume ratio, fused risk, Z-score, pressure) and a
+  plain-English suggestion. Guidance is statistical decision support - **not
+  financial advice** - and no trades are ever placed.
+
+In the UI: the Settings screen has a "Live market data" card (start/stop/poll
+once, with the delay stated honestly) and a "Trigger rules" editor; fired
+guidance shows up on the Command screen.

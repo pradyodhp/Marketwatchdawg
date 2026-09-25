@@ -1,4 +1,4 @@
-import type { ApiAlert, ApiSettings, ScoreBar } from './types';
+import type { ApiAlert, ApiGuidance, ApiRule, ApiSettings, LiveStatus, ScoreBar } from './types';
 
 const BASE = '';
 
@@ -46,6 +46,16 @@ export const api = {
     cooldown: { window_bars: number };
     notifications: { webhook_url: string; min_severity: string };
   }>) => req<ApiSettings>('/settings', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(update) }),
+  rules: () => req<ApiRule[]>('/rules'),
+  addRule: (r: { symbol: string; metric: string; threshold: number; note?: string }) =>
+    req<ApiRule>('/rules', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(r) }),
+  removeRule: (id: string) => req<{ deleted: string }>(`/rules/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+  guidance: () => req<ApiGuidance[]>('/guidance'),
+  liveStatus: () => req<LiveStatus>('/live/status'),
+  liveStart: (interval_sec?: number) =>
+    req<LiveStatus>('/live/start', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(interval_sec ? { interval_sec } : {}) }),
+  liveStop: () => req<LiveStatus>('/live/stop', { method: 'POST' }),
+  livePoll: () => req<Record<string, unknown>>('/live/poll', { method: 'POST' }),
   ingest: (symbol: string, body: string | ArrayBuffer, isParquet: boolean) =>
     req<{ symbol: string; rows_received: number; rows_loaded: number; rows_dropped: number; invalid_reasons: Record<string, number> }>(
       `/ingest?symbol=${encodeURIComponent(symbol)}`, {

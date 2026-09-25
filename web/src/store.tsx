@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { api } from './api';
 import { tierFromThresholds } from './engine';
-import type { Alert, AlertState, ApiAlert, ApiSettings, ScoreBar, Settings, Status, Tracked } from './types';
+import type { Alert, AlertState, ApiAlert, ApiGuidance, ApiRule, ApiSettings, LiveStatus, ScoreBar, Settings, Status, Tracked } from './types';
 
 type Toast = { id: string; alert: Alert; channels: string[] };
 type DetectInfo = { symbols: number; batches: number; alerts: number; elapsed_ms: number; cached: boolean } | null;
@@ -20,6 +20,9 @@ type Store = {
   ingest: (items: { symbol: string; csv?: string; parquet?: ArrayBuffer }[]) => Promise<{ symbol: string; loaded: number; dropped: number; reasons: Record<string, number> }[]>;
   reload: () => Promise<void>;
   uploadedSyms: Set<string>;
+  rules: ApiRule[]; addRule: (r: { symbol: string; metric: string; threshold: number; note?: string }) => Promise<void>; removeRule: (id: string) => Promise<void>;
+  guidance: ApiGuidance[];
+  live: LiveStatus | null; startLive: (interval?: number) => Promise<void>; stopLive: () => Promise<void>; pollLive: () => Promise<void>; liveBusy: boolean;
 };
 
 const Ctx = createContext<Store | null>(null);
@@ -119,6 +122,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [focusSym, setFocusSym] = useState('');
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [applying, setApplying] = useState(false);
+  const [rules, setRules] = useState<ApiRule[]>([]);
+  const [guidance, setGuidance] = useState<ApiGuidance[]>([]);
+  const [live, setLive] = useState<LiveStatus | null>(null);
+  const [liveBusy, setLiveBusy] = useState(false);
   const seen = useRef<Set<string> | null>(null);
 
   const load = useCallback(async () => {
@@ -130,6 +137,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const nameMap: Record<string, { name: string; sector: string }> = {};
       for (const [k, v] of Object.entries(universe.entries)) nameMap[k] = { name: v.name, sector: v.sector };
       setNames(nameMap);
+      const [ruleList, guideList, liveStatus] = await Promise.all([
+        api.rules().catch(() => []), api.guidance().catch(() => []), api.liveStatus().catch(() => null),
+      ]);
+      setRules(ruleList); setGuidance(guideList); setLive(liveStatus);
       setStage('Running Z-score, EWMA and Isolation Forest over the curated history');
       const det = await api.detect();
       setDetectInfo(det);
@@ -269,6 +280,23 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     ingest,
     reload: load,
     uploadedSyms,
+    rules,
+    addRule: async (r) => { await api.addRule(r); setRules(await api.rules()); },
+    removeRule: async (id) => { await api.removeRule(id); setRules(await api.rules()); },
+    guidance,
+    live,
+    startLive: async (interval) => { setLiveBusy(true); try { setLive(await api.liveStart(interval)); } finally { setLiveBusy(false); } },
+    stopLive: async () => { setLiveBusy(true); try { setLive(await api.liveStop()); } finally { setLiveBusy(false); } },
+    pollLive: async () => {
+      setLiveBusy(true);
+      try {
+        await api.livePoll();
+        setLive(await api.liveStatus());
+        setGuidance(await api.guidance().catch(() => []));
+        setApiAlerts(await api.alerts().catch(() => []));
+      } finally { setLiveBusy(false); }
+    },
+    liveBusy,
   };
   return <Ctx.Provider value={store}>{children}</Ctx.Provider>;
 }

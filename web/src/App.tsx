@@ -3,6 +3,7 @@ import { Link, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import './style.css';
 import { pctStr, price, sampleCsv, splitCsvBySymbol, tier } from './engine';
 import { StoreProvider, useStore, stateToStatus } from './store';
+import { RULE_METRICS } from './types';
 import type { Alert, ScoreBar, Status, Tracked } from './types';
 import { CandleChart, Counter, Gauge, LineChart, Spark } from './Charts';
 
@@ -91,6 +92,22 @@ function AlertCard({ a, i, compact }: { a: Alert; i: number; compact?: boolean }
   </article>;
 }
 
+function GuidancePanel() {
+  const { guidance, rules, live } = useStore();
+  const nav = useNavigate();
+  if (!guidance.length && !rules.length) return null;
+  return <section className="mx-card mx-panel">
+    <div className="mx-panel-h"><h2>Guidance</h2><span>{rules.length} trigger rule{rules.length === 1 ? '' : 's'} · {live?.running ? 'live polling on' : 'polling off'}</span></div>
+    {guidance.slice(0, 4).map((g, i) => <article key={g.id} className="mx-card mx-alert" style={{ ['--i' as string]: i }}>
+      <header><div className="mx-alert-id"><b>{g.title}</b><span>{new Date(g.timestamp).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span></div><span className="mx-chip">Rs {g.close.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span></header>
+      <p className="mx-alert-sum">{g.suggestion}</p>
+      {g.note && <p className="mx-note">Your note: {g.note}</p>}
+      <div className="mx-alert-foot"><button className="mx-btn is-ghost" onClick={() => nav('/markets')}>Chart →</button><span className="mx-note">{g.disclaimer}</span></div>
+    </article>)}
+    {!guidance.length && <p className="mx-empty">{rules.length} rule{rules.length === 1 ? '' : 's'} armed. They fire on new bars from live polling or uploads.</p>}
+  </section>;
+}
+
 function Command() {
   const { tracked, tick, alerts, status, riskAt, setFocusSym, detectInfo, settings } = useStore();
   const nav = useNavigate();
@@ -122,6 +139,8 @@ function Command() {
         </div>; })}
       </div>
     </section>
+
+    <GuidancePanel />
 
     <section className="mx-split">
       <div className="mx-card mx-panel">
@@ -371,6 +390,60 @@ function Slider({ label, value, min, max, step, onChange, fmt }: { label: string
     <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(Number(e.target.value))} style={{ ['--p' as string]: `${((value - min) / (max - min)) * 100}%` }} /></label>;
 }
 
+function LiveCard() {
+  const { live, startLive, stopLive, pollLive, liveBusy } = useStore();
+  if (!live) return null;
+  return <section className="mx-card mx-panel">
+    <div className="mx-panel-h"><h2>Live market data</h2><span className={`mx-chip ${live.running ? '' : 'is-ghost'}`}>{live.running ? `polling every ${Math.round(live.interval_sec / 60)} min` : 'off'}</span></div>
+    <p className="mx-sub">Source: {live.source}. {live.delay_note}</p>
+    {live.last_summary?.polled_at && <p className="mx-note">Last poll {new Date(live.last_summary.polled_at).toLocaleTimeString('en-IN')}: {live.last_summary.new_bars ?? 0} new bars, {live.last_summary.new_alerts ?? 0} new alerts, {live.last_summary.guidance_fired ?? 0} rule hits.</p>}
+    <div className="mx-actions">
+      {live.running
+        ? <button className="mx-btn" disabled={liveBusy} onClick={stopLive}>Stop polling</button>
+        : <button className="mx-btn is-primary" disabled={liveBusy || !live.available} onClick={() => startLive(300)}>Start live polling</button>}
+      <button className="mx-btn is-ghost" disabled={liveBusy || !live.available} onClick={pollLive}>{liveBusy ? 'Polling…' : 'Poll once now'}</button>
+    </div>
+    {!live.available && <p className="mx-note">yfinance is not installed on the server - pip install yfinance to enable.</p>}
+  </section>;
+}
+
+function RulesCard() {
+  const { rules, addRule, removeRule, tracked } = useStore();
+  const [symbol, setSymbol] = useState('*');
+  const [metric, setMetric] = useState('price_above');
+  const [threshold, setThreshold] = useState('');
+  const [note, setNote] = useState('');
+  const [busy, setBusy] = useState(false);
+  const meta = RULE_METRICS.find(m => m.id === metric)!;
+  const submit = async () => {
+    const v = parseFloat(threshold);
+    if (!Number.isFinite(v)) return;
+    setBusy(true);
+    try { await addRule({ symbol, metric, threshold: v, note }); setThreshold(''); setNote(''); } finally { setBusy(false); }
+  };
+  return <section className="mx-card mx-panel">
+    <div className="mx-panel-h"><h2>Trigger rules</h2><span>{rules.length} armed</span></div>
+    <p className="mx-sub">Fire guidance when a stock hits a level or a metric crosses a line - evaluated on every new bar from live polling or uploads.</p>
+    {rules.map(r => <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,.08)' }}>
+      <div><b>{r.symbol}</b> · {RULE_METRICS.find(m => m.id === r.metric)?.label ?? r.metric} <b>{r.threshold}</b>{r.note ? <span className="mx-note"> · {r.note}</span> : null}</div>
+      <button className="mx-btn is-ghost" onClick={() => removeRule(r.id)}>Delete</button>
+    </div>)}
+    <div style={{ display: 'grid', gap: 8, marginTop: 12 }}>
+      <div className="mx-seg is-small">
+        <button className={symbol === '*' ? 'is-on' : ''} onClick={() => setSymbol('*')}>Any stock</button>
+        {tracked.slice(0, 6).map(t => <button key={t.sym} className={symbol === t.sym ? 'is-on' : ''} onClick={() => setSymbol(t.sym)}>{t.sym}</button>)}
+      </div>
+      <select className="mx-input" value={metric} onChange={e => setMetric(e.target.value)}>
+        {RULE_METRICS.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
+      </select>
+      <input className="mx-input" type="number" placeholder={`Threshold (${meta.hint})`} value={threshold} onChange={e => setThreshold(e.target.value)} />
+      <input className="mx-input" placeholder="Note to self (optional)" value={note} onChange={e => setNote(e.target.value)} />
+      <button className="mx-btn is-primary" disabled={busy || !threshold} onClick={submit}>{busy ? 'Adding…' : 'Arm rule'}</button>
+    </div>
+    <p className="mx-note">Guidance is statistical decision support, not financial advice. No trades are placed.</p>
+  </section>;
+}
+
 function Settings() {
   const { settings: s, setSettings, applySettings, applying, testToast } = useStore();
   const wsum = s.weights.z + s.weights.ewma + s.weights.iforest || 1;
@@ -410,6 +483,8 @@ function Settings() {
       <div className="mx-actions" style={{ marginTop: 12 }}><button className="mx-btn" onClick={testToast}>Send a test alert</button><button className="mx-btn is-ghost" onClick={() => setSettings({ ...s, minScore: 50, thresholds: { medium: 50, high: 70, critical: 85 }, cooldownBars: 6, zscoreThreshold: 3, ewmaAlpha: 0.3, ewmaThreshold: 2.5, ifRefit: 8, weights: { z: 0.35, ewma: 0.25, iforest: 0.4 } })}>Reset to defaults</button></div>
       <p className="mx-note">HIGH and CRITICAL alerts post to the webhook above. Connect Slack, Telegram or WhatsApp through any webhook bridge.</p>
     </section>
+    <LiveCard />
+    <RulesCard />
     <section className="mx-card mx-panel">
       <div className="mx-panel-h"><h3>config/settings.yaml</h3><span>live preview</span></div>
       <pre className="mx-code">{yaml}</pre>

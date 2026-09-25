@@ -15,6 +15,7 @@ from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from dataclasses import asdict
 from pydantic import BaseModel, field_validator, ConfigDict, Field
 
 from marketwatch.alert_engine import AlertEngine, AlertState
@@ -195,6 +196,23 @@ class SettingsResponse(BaseModel):
     replay: dict[str, Any]
 
 
+class RuleCreate(BaseModel):
+    """New trigger rule from the UI."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    symbol: str = "*"
+    metric: str
+    threshold: float
+    note: str = ""
+
+
+class LiveStart(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    interval_sec: int | None = None
+
+
 class ScoreBar(BaseModel):
     """One bar of candles plus detector evidence and fused risk."""
 
@@ -330,6 +348,19 @@ class MarketWatchAPI:
             notifier=notifier,
             iforest_refit_interval=detectors.isolation_forest_refit_interval,
         )
+
+    def live_poller(self) -> "LivePoller":
+        """Lazily built live-data poller bound to this runtime."""
+        if getattr(self, "_live_poller", None) is None:
+            from marketwatch.live import LivePoller
+
+            self._live_poller = LivePoller(
+                self,
+                curated_dir=Path(self.settings.curated_dir),
+                rules_path=self.config_path.parent / "rules.yaml",
+                guidance_path=Path(self.settings.data_dir) / "guidance.jsonl",
+            )
+        return self._live_poller
 
     def reconfigure(self, settings: Any) -> None:
         """Apply new settings: rebuild controller, reset replay and detection cache."""
@@ -628,6 +659,47 @@ def create_app(service: MarketWatchAPI | None = None) -> FastAPI:
         runtime.reconfigure(load_settings(config_path))
         logger.info("settings updated and applied: %s", update.model_dump(exclude_none=True))
         return SettingsResponse(**runtime.settings_payload())
+
+    # ── trigger rules + guidance ─────────────────────────────────────────────
+    @app.get("/rules", tags=["rules"])
+    def list_rules() -> list[dict[str, Any]]:
+        return [asdict(rule) for rule in runtime.live_poller().rules()]
+
+    @app.post("/rules", status_code=201, tags=["rules"])
+    def create_rule(body: RuleCreate) -> dict[str, Any]:
+        try:
+            rule = runtime.live_poller().add_rule(body.symbol, body.metric, body.threshold, body.note)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        return asdict(rule)
+
+    @app.delete("/rules/{rule_id}", tags=["rules"])
+    def delete_rule(rule_id: str) -> dict[str, Any]:
+        if not runtime.live_poller().delete_rule(rule_id):
+            raise HTTPException(status_code=404, detail=f"unknown rule: {rule_id}")
+        return {"deleted": rule_id}
+
+    @app.get("/guidance", tags=["guidance"])
+    def list_guidance(limit: int = 200) -> list[dict[str, Any]]:
+        return [asdict(event) for event in runtime.live_poller().guidance(limit)]
+
+    # ── live data polling ────────────────────────────────────────────────────
+    @app.get("/live/status", tags=["live"])
+    def live_status() -> dict[str, Any]:
+        return runtime.live_poller().status()
+
+    @app.post("/live/start", tags=["live"])
+    def live_start(body: LiveStart | None = None) -> dict[str, Any]:
+        return runtime.live_poller().start(body.interval_sec if body else None)
+
+    @app.post("/live/stop", tags=["live"])
+    def live_stop() -> dict[str, Any]:
+        return runtime.live_poller().stop()
+
+    @app.post("/live/poll", tags=["live"])
+    def live_poll() -> dict[str, Any]:
+        """Run one poll cycle immediately (also used by tests and the UI)."""
+        return runtime.live_poller().poll_once()
 
     @app.get("/universe", response_model=UniverseResponse, tags=["universe"])
     def universe() -> UniverseResponse:
