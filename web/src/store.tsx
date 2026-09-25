@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { api } from './api';
 import { tierFromThresholds } from './engine';
-import type { Alert, AlertState, ApiAlert, ApiGuidance, ApiRule, ApiSettings, LiveStatus, ScoreBar, Settings, Status, Tracked } from './types';
+import type { Alert, AlertState, ApiAlert, ApiGuidance, ApiRule, ApiSettings, CaseFile, LiveStatus, ScoreBar, Settings, Status, Tracked, WatchProfile } from './types';
 
 type Toast = { id: string; alert: Alert; channels: string[] };
 type DetectInfo = { symbols: number; batches: number; alerts: number; elapsed_ms: number; cached: boolean } | null;
@@ -23,6 +23,10 @@ type Store = {
   rules: ApiRule[]; addRule: (r: { symbol: string; metric: string; threshold: number; note?: string }) => Promise<void>; removeRule: (id: string) => Promise<void>;
   guidance: ApiGuidance[];
   live: LiveStatus | null; startLive: (interval?: number) => Promise<void>; stopLive: () => Promise<void>; pollLive: () => Promise<void>; liveBusy: boolean;
+  profiles: Record<string, WatchProfile>; setProfile: (sym: string, p: WatchProfile | null) => void;
+  tierFor: (sym: string, s: number) => string;
+  cases: CaseFile[]; addCase: (title: string, owner: string) => void; updateCase: (id: string, patch: Partial<CaseFile>) => void; removeCase: (id: string) => void;
+  sectorMedian: (sym: string, bar: number) => { peers: number; median: number } | null;
 };
 
 const Ctx = createContext<Store | null>(null);
@@ -186,6 +190,41 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [apiAlerts, barsBySym, names, uploadedSyms],
   );
 
+  const [profiles, setProfilesState] = useState<Record<string, WatchProfile>>(() => {
+    try { return JSON.parse(localStorage.getItem('mw-profiles') ?? '{}'); } catch { return {}; }
+  });
+  const [cases, setCasesState] = useState<CaseFile[]>(() => {
+    try { return JSON.parse(localStorage.getItem('mw-cases') ?? '[]'); } catch { return []; }
+  });
+  useEffect(() => { try { localStorage.setItem('mw-profiles', JSON.stringify(profiles)); } catch { /* ignore */ } }, [profiles]);
+  useEffect(() => { try { localStorage.setItem('mw-cases', JSON.stringify(cases)); } catch { /* ignore */ } }, [cases]);
+
+  const setProfile = useCallback((sym: string, p: WatchProfile | null) => {
+    setProfilesState(prev => { const n = { ...prev }; if (p) n[sym] = p; else delete n[sym]; return n; });
+  }, []);
+  const tierFor = useCallback((sym: string, s: number) => {
+    const th = profiles[sym] ?? (settings ?? { thresholds: { medium: 50, high: 70, critical: 85 } }).thresholds;
+    return tierFromThresholds(s, th);
+  }, [profiles, settings]);
+  const addCase = useCallback((title: string, owner: string) => {
+    setCasesState(prev => [{ id: `case-${Date.now().toString(36)}`, title: title.trim() || 'Untitled case', owner: owner.trim(), status: 'open', created: new Date().toISOString(), alertIds: [], notes: [] }, ...prev]);
+  }, []);
+  const updateCase = useCallback((id: string, patch: Partial<CaseFile>) => {
+    setCasesState(prev => prev.map(c => (c.id === id ? { ...c, ...patch } : c)));
+  }, []);
+  const removeCase = useCallback((id: string) => { setCasesState(prev => prev.filter(c => c.id !== id)); }, []);
+  const sectorMedian = useCallback((sym: string, bar: number) => {
+    const self = tracked.find(t => t.sym === sym);
+    if (!self) return null;
+    const moves = tracked.filter(t => t.sym !== sym && t.sector === self.sector).map(t => {
+      const i = Math.min(bar, t.series.length - 1);
+      if (i <= 0) return null;
+      return (t.series[i].c / t.series[i - 1].c - 1) * 100;
+    }).filter((x): x is number => x !== null).sort((a, b) => a - b);
+    if (!moves.length) return null;
+    return { peers: moves.length, median: moves[Math.floor(moves.length / 2)] };
+  }, [tracked]);
+
   const channels = useMemo(() => {
     if (!settings) return ['dashboard only'];
     if (settings.webhookUrl) {
@@ -287,6 +326,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     live,
     startLive: async (interval) => { setLiveBusy(true); try { setLive(await api.liveStart(interval)); } finally { setLiveBusy(false); } },
     stopLive: async () => { setLiveBusy(true); try { setLive(await api.liveStop()); } finally { setLiveBusy(false); } },
+    profiles, setProfile, tierFor, cases, addCase, updateCase, removeCase, sectorMedian,
     pollLive: async () => {
       setLiveBusy(true);
       try {

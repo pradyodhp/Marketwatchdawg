@@ -102,3 +102,10 @@ export const RULE_METRICS: { id: string; label: string; hint: string }[] = [
   { id: 'pressure_above', label: 'Buy pressure above', hint: '-1..1' },
   { id: 'pressure_below', label: 'Sell pressure below', hint: '-1..1' },
 ];
+
+export type WatchProfile = { medium: number; high: number; critical: number };
+export type CaseNote = { ts: string; text: string };
+export type CaseFile = {
+  id: string; title: string; owner: string; status: 'open' | 'closed';
+  created: string; alertIds: string[]; notes: CaseNote[];
+};
