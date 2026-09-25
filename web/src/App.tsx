@@ -1,22 +1,42 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import './style.css';
 import { pctStr, price, sampleCsv, splitCsvBySymbol, tier } from './engine';
 import { StoreProvider, useStore, stateToStatus } from './store';
 import { RULE_METRICS } from './types';
-import type { Alert, ScoreBar, Status, Tracked } from './types';
+import type { Alert, CaseFile, ScoreBar, Status, Tracked, WatchProfile } from './types';
 import { CandleChart, Counter, Gauge, LineChart, Spark } from './Charts';
+import { STOCK_INFO } from './stockInfo';
 
 const NAV = [
   { to: '/', label: 'Command' },
   { to: '/alerts', label: 'Alerts' },
   { to: '/markets', label: 'Markets' },
   { to: '/upload', label: 'Your data' },
+  { to: '/cases', label: 'Cases' },
+  { to: '/guide', label: 'Guide' },
   { to: '/settings', label: 'Settings' },
 ];
 const STATUS_LABEL: Record<Status, string> = { open: 'Open', ack: 'Acknowledged', resolved: 'Resolved', escalated: 'Escalated' };
 
-function Score({ s, big }: { s: number; big?: boolean }) { return <span className={`mx-score mx-t-${tier(s)} ${big ? 'is-big' : ''}`}>{s}</span>; }
+function Score({ s, big, sym }: { s: number; big?: boolean; sym?: string }) {
+  const { tierFor } = useStore();
+  return <span className={`mx-score mx-t-${sym ? tierFor(sym, s) : tier(s)} ${big ? 'is-big' : ''}`}>{s}</span>;
+}
+
+// Company logos via Google's favicon service (public favicons, no key), monogram tile as fallback.
+const LOGO_DOMAIN: Record<string, string> = {
+  ADANIENT: 'adani.com', HDFCBANK: 'hdfcbank.com', INFY: 'infosys.com',
+  PAYTM: 'paytm.com', RELIANCE: 'ril.com', SBIN: 'sbi.co.in', SUZLON: 'www.suzlon.com',
+  TATAMOTORS: 'www.tatamotors.com', TCS: 'www.tcs.com', YESBANK: 'yesbank.in', ZOMATO: 'zomato.com',
+};
+function Logo({ sym }: { sym: string }) {
+  const [err, setErr] = useState(false);
+  const dom = LOGO_DOMAIN[sym];
+  if (!dom || err) return <span className="mx-logo-tile" aria-hidden>{sym[0]}</span>;
+  return <img className="mx-logo-img" src={`https://www.google.com/s2/favicons?domain=${dom}&sz=128`} alt="" onError={() => setErr(true)} />;
+}
 
 function Topbar() {
   const { tick, playing, setPlaying, restart, settings, setSettings, alerts, status, tracked, bars } = useStore();
@@ -78,7 +98,7 @@ function AlertCard({ a, i, compact }: { a: Alert; i: number; compact?: boolean }
   const st = status(a.id);
   return <article className={`mx-card mx-alert is-${st} mx-t-${tier(a.score)}`} style={{ ['--i' as string]: i }}>
     <div className="mx-alert-top">
-      <Score s={a.score} />
+      <Logo sym={a.sym} /><Score s={a.score} sym={a.sym} />
       <div className="mx-alert-id"><b>{a.sym}</b><span>{a.date} {a.t} · {pctStr(a.move)} · {a.source === 'upload' ? 'your data' : a.name}</span></div>
       <span key={st} className={`mx-pill is-${st}`}>{STATUS_LABEL[st]}</span>
     </div>
@@ -108,9 +128,103 @@ function GuidancePanel() {
   </section>;
 }
 
+function BacktestCard() {
+  const { tracked, settings, profiles } = useStore();
+  const rows = useMemo(() => {
+    const days: Record<string, { date: string; alerts: number; high: number; quiet: number; first: string }> = {};
+    for (const t of tracked) {
+      const th = profiles[t.sym] ?? settings.thresholds;
+      let lastFire = -1e9;
+      t.series.forEach((b, i) => {
+        if (b.risk >= th.medium && i - lastFire >= settings.cooldownBars) {
+          lastFire = i;
+          const day = b.iso.slice(0, 10);
+          const d = (days[day] ||= { date: day, alerts: 0, high: 0, quiet: 0, first: b.t });
+          d.alerts++;
+          if (b.risk >= th.high) d.high++;
+          if (Math.abs(b.log_return) < 0.0005 && b.volume_ratio < 1) d.quiet++;
+        }
+      });
+    }
+    return Object.values(days).sort((a, b) => a.date.localeCompare(b.date));
+  }, [tracked, settings, profiles]);
+  if (!rows.length) return null;
+  const total = rows.reduce((n, r) => n + r.alerts, 0);
+  const quiet = rows.reduce((n, r) => n + r.quiet, 0);
+  const fmtDay = (d: string) => new Date(`${d}T00:00:00`).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+  return <section className="mx-card mx-panel">
+    <div className="mx-panel-h"><h2>Backtest: current settings on loaded history</h2><span>{total} alerts would fire</span></div>
+    <p className="mx-sub" style={{ marginTop: 0 }}>Replays the fused risk series bar-by-bar with your thresholds, per-symbol profiles and cooldown. Low-signal = fired on a bar with under 0.05% move and below-average volume.</p>
+    <div className="mx-bt">
+      <div className="mx-bt-row mx-bt-head"><span>Session</span><span>Alerts</span><span>HIGH+</span><span>Low-signal</span></div>
+      {rows.map(r => <div key={r.date} className="mx-bt-row">
+        <b>{fmtDay(r.date)}</b><span>{r.alerts}</span><span className={r.high ? 'is-down' : ''}>{r.high}</span><span>{r.alerts ? `${Math.round((r.quiet / r.alerts) * 100)}%` : '-'}</span>
+      </div>)}
+    </div>
+    <p className="mx-note">{total ? `${Math.round((quiet / total) * 100)}% of alerts fired on low-signal bars. Lower that share with stricter thresholds; catch more with Aggressive presets in Settings.` : ''} Methodology: client-side replay over the loaded window, not a full re-detection.</p>
+  </section>;
+}
+
+const INFO_FRESHNESS = 'Company facts and events from Wikipedia; results dates from company IR pages (tcs.com, infosys.com); curated 25 Sept 2026 - market stats computed from the loaded data - verify events against NSE/BSE filings';
+const TIER_NAME: Record<string, string> = { low: 'CALM', med: 'WATCH', high: 'HIGH', crit: 'CRITICAL' };
+
+function StockInfoContent({ sym }: { sym: string }) {
+  const { tracked, tick, alerts, riskAt, tierFor, sectorMedian } = useStore();
+  const info = STOCK_INFO[sym];
+  const t = tracked.find(x => x.sym === sym);
+  if (!info) return <p className="mx-empty">No profile for {sym} yet.</p>;
+  const upto = t ? Math.min(tick, t.series.length - 1) : 0;
+  const win = t ? t.series.slice(0, upto + 1) : [];
+  const ch = t && win.length ? (win[win.length - 1].c / t.series[0].o - 1) * 100 : 0;
+  const hi = t && win.length ? Math.max(...win.map(b => b.h)) : 0;
+  const lo = t && win.length ? Math.min(...win.map(b => b.l)) : 0;
+  const risk = t ? Math.round(riskAt(t, upto)) : 0;
+  const symAlerts = alerts.filter(a => a.sym === sym);
+  const latest = symAlerts[0];
+  const topScore = symAlerts.length ? Math.max(...symAlerts.map(a => a.score)) : 0;
+  const peer = t && upto > 0 ? sectorMedian(sym, upto) : null;
+  return <div className="mx-stockinfo">
+    <div className="mx-stockinfo-h"><Logo sym={sym} /><div><b>{info.name}</b><span>{sym}{t ? ` · ${t.sector}` : ''}</span></div></div>
+    <div className="mx-chips"><span>Founded {info.founded}</span><span>HQ {info.hq}</span></div>
+    <p className="mx-info-about">{info.about}</p>
+    <p className="mx-note" style={{ marginTop: 0 }}>{info.history}</p>
+    {t && <>
+      <h4>Recent market performance</h4>
+      <div className="mx-statgrid">
+        <div className="mx-stat"><span>Window move</span><b className={ch >= 0 ? 'is-up' : 'is-down'}>{pctStr(ch)}</b></div>
+        <div className="mx-stat"><span>Window high</span><b>{price(hi)}</b></div>
+        <div className="mx-stat"><span>Window low</span><b>{price(lo)}</b></div>
+        <div className="mx-stat"><span>Risk now</span><b>{risk} · {TIER_NAME[tierFor(sym, risk)]}</b></div>
+      </div>
+      {peer && <p className="mx-peer" style={{ margin: '10px 0 0' }}>{Math.abs(ch - peer.median) > 1.5
+        ? <><b className="is-down">Out of line with sector</b> · {t.sector} peers median {pctStr(peer.median)} vs {pctStr(ch)} here.</>
+        : <><b>Moving with sector</b> · {t.sector} peers median {pctStr(peer.median)}.</>}</p>}
+      <h4>Alerts on this name</h4>
+      {symAlerts.length
+        ? <p className="mx-note" style={{ margin: 0 }}>{symAlerts.length} alert{symAlerts.length === 1 ? '' : 's'} this session · highest score {topScore}{latest ? ` · latest: ${latest.reasons[0]}` : ''}</p>
+        : <p className="mx-note" style={{ margin: 0 }}>None this session - the detectors found nothing unusual here.</p>}
+    </>}
+    <h4>News & events</h4>
+    {info.events.length
+      ? <ul className="mx-events">{info.events.map((e, i) => <li key={i}><span className={`mx-ev mx-ev-${e.kind}`}>{e.kind === 'results' ? 'RESULTS' : e.kind === 'corporate' ? 'CORP ACTION' : 'NEWS'}</span><div><b>{e.date}</b><span>{e.label}</span></div></li>)}</ul>
+      : <p className="mx-note" style={{ margin: 0 }}>No curated events for this name yet. Check NSE/BSE filings for the full calendar.</p>}
+    <p className="mx-note mx-fresh">{INFO_FRESHNESS}</p>
+  </div>;
+}
+
+function StockSheet({ sym, onClose }: { sym: string; onClose: () => void }) {
+  return createPortal(<div className="mx-sheet-bg" onClick={onClose}>
+    <div className="mx-sheet" onClick={e => e.stopPropagation()}>
+      <div className="mx-sheet-top"><b>Stock profile</b><button className="mx-btn is-ghost" onClick={onClose}>Close</button></div>
+      <StockInfoContent sym={sym} />
+    </div>
+  </div>, document.body);
+}
+
 function Command() {
   const { tracked, tick, alerts, status, riskAt, setFocusSym, detectInfo, settings } = useStore();
   const nav = useNavigate();
+  const [infoSym, setInfoSym] = useState<string | null>(null);
   const live = tracked.filter(t => t.source === 'live');
   const open = alerts.filter(a => status(a.id) === 'open' && a.score >= settings.minScore).length;
   const top = Math.max(...alerts.map(a => a.score), 0);
@@ -140,6 +254,8 @@ function Command() {
       </div>
     </section>
 
+    <BacktestCard />
+
     <GuidancePanel />
 
     <section className="mx-split">
@@ -152,15 +268,17 @@ function Command() {
         <div className="mx-watch">{live.map((t, k) => {
           const i = Math.min(tick, t.series.length - 1);
           const c = t.series[i].c; const ch = (c / t.series[0].o - 1) * 100; const r = riskAt(t, i);
-          return <button key={t.sym} className="mx-watch-row" onClick={() => { setFocusSym(t.sym); nav('/markets'); }} style={{ ['--i' as string]: k }}>
-            <span className="mx-watch-id"><b>{t.sym}</b><em>{t.sector}</em></span>
+          return <div key={t.sym} className="mx-watch-row" role="button" tabIndex={0} onClick={() => { setFocusSym(t.sym); nav('/markets'); }} onKeyDown={e => { if (e.key === 'Enter') { setFocusSym(t.sym); nav('/markets'); } }} style={{ ['--i' as string]: k }}>
+            <Logo sym={t.sym} /><span className="mx-watch-id"><b>{t.sym}</b><em>{t.sector}</em></span>
             <Spark values={t.series.slice(0, i + 1).map(x => x.c)} up={ch >= 0} />
             <span className="mx-watch-p"><b>{price(c)}</b><em className={ch >= 0 ? 'is-up' : 'is-down'}>{pctStr(ch)}</em></span>
-            <Score s={Math.round(r)} />
-          </button>;
+            <Score s={Math.round(r)} sym={t.sym} />
+            <span className="mx-info-dot" title={`About ${t.sym}`} onClick={e => { e.stopPropagation(); setInfoSym(t.sym); }}>i</span>
+          </div>;
         })}</div>
       </div>
     </section>
+    {infoSym && <StockSheet sym={infoSym} onClose={() => setInfoSym(null)} />}
   </div>;
 }
 
@@ -193,8 +311,9 @@ const fmtLogTime = (iso: string) => {
 const EVENT_VERB: Record<string, string> = { NEW: 'Alert raised by the detector pipeline', ACKNOWLEDGED: 'Acknowledged', ESCALATED: 'Escalated to compliance', RESOLVED: 'Resolved' };
 
 function AlertDetail() {
-  const { alerts, selected, select, tracked, status, setStatus, settings } = useStore();
+  const { alerts, selected, select, tracked, status, setStatus, settings, sectorMedian, cases, updateCase } = useStore();
   const [note, setNote] = useState('');
+  const [caseId, setCaseId] = useState('');
   const a = alerts.find(x => x.id === selected) ?? alerts[0];
   if (!a) return <div className="mx-empty">No alerts yet. <Link to="/">Back to command</Link></div>;
   const t = tracked.find(x => x.sym === a.sym) as Tracked | undefined;
@@ -208,6 +327,7 @@ function AlertDetail() {
   const vols = series.map(c => c.v / 1000);
   const baseline = vols.map((_, i) => { const w = series.slice(Math.max(0, i - 20), i).map(c => c.v / 1000); return w.length ? w.reduce((s, x) => s + x, 0) / w.length : vols[i]; });
   const st = status(a.id);
+  const peer = inWindow && t && a.bar > 0 ? sectorMedian(a.sym, a.bar) : null;
   const parts = [
     { k: 'z' as const, label: 'Rolling Z-score', hint: 'price, volume and pressure vs time-of-day baselines', v: a.contrib.z, max: settings.weights.z },
     { k: 'ewma' as const, label: 'EWMA deviation', hint: 'break from the smoothed trend', v: a.contrib.ewma, max: settings.weights.ewma },
@@ -223,8 +343,11 @@ function AlertDetail() {
       <Gauge value={a.score} />
       <div className="mx-detail-id">
         <span className={`mx-sev mx-t-${tier(a.score)}`}>{a.sev}</span>
-        <h1>{a.sym}</h1>
+        <h1><Logo sym={a.sym} /> {a.sym}</h1>
         <p>{a.name} · {a.date} {a.t} IST · <b className={a.move >= 0 ? 'is-up' : 'is-down'}>{pctStr(a.move)}</b> in 5 min{a.simulated ? ' · simulated injection' : ''}</p>
+        {peer && <p className="mx-peer">{Math.abs(a.move - peer.median) > 0.5 && Math.abs(a.move) > Math.abs(peer.median) * 2
+          ? <><b className="is-down">Isolated move</b> · {t!.sector} peers median {pctStr(peer.median)} at this bar - this one moved on its own.</>
+          : <><b>Sector-wide move</b> · {t!.sector} peers median {pctStr(peer.median)} at this bar - not just this stock.</>}</p>}
         <span key={st} className={`mx-pill is-${st}`}>{STATUS_LABEL[st]}</span>
       </div>
     </section>
@@ -269,6 +392,17 @@ function AlertDetail() {
         {st !== 'open' && <button className="mx-btn is-ghost" onClick={() => act('open')}>Reopen</button>}
       </div>
       <ul className="mx-log">{log.map((e, i) => <li key={e.timestamp + i}><time>{fmtLogTime(e.timestamp)}</time>{EVENT_VERB[e.to_state] ?? e.to_state}{e.note ? `: "${e.note}"` : ''}</li>)}</ul>
+      <div className="mx-actions" style={{ marginTop: 14, alignItems: 'center' }}>
+        <select className="mx-input" style={{ minHeight: 40, flex: '0 1 auto' }} value={caseId} onChange={e => setCaseId(e.target.value)}>
+          <option value="">Add to case…</option>
+          {cases.filter(c => c.status === 'open').map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+        </select>
+        <button className="mx-btn" disabled={!caseId || cases.find(c => c.id === caseId)?.alertIds.includes(a.id)}
+          onClick={() => { const c = cases.find(c => c.id === caseId); if (c) updateCase(c.id, { alertIds: [...c.alertIds, a.id] }); }}>
+          {cases.find(c => c.id === caseId)?.alertIds.includes(a.id) ? 'In case' : 'Attach'}
+        </button>
+        <Link className="mx-more" to="/cases">Cases →</Link>
+      </div>
     </section>
   </div>;
 }
@@ -281,6 +415,12 @@ function Markets() {
   const b = t.series[upto]; const c = t.series[upto];
   const ch = (c.c / t.series[0].o - 1) * 100;
   const marks = alerts.filter(a => a.sym === t.sym && a.bar >= 0).map(a => a.bar);
+  const peerDay = (() => {
+    const peers = tracked.filter(x => x.sym !== t.sym && x.sector === t.sector);
+    if (!peers.length) return null;
+    const chs = peers.map(x => { const j = Math.min(tick, x.series.length - 1); return (x.series[j].c / x.series[0].o - 1) * 100; }).sort((a, b) => a - b);
+    return chs[Math.floor(chs.length / 2)];
+  })();
   const riskSeries = t.series.slice(0, upto + 1).map(s => s.risk);
   const meters = [
     { label: 'Z-score', v: Math.min(1, Math.max(Math.abs(b.z_ret), Math.abs(b.z_vol)) / 6), txt: `${Math.max(Math.abs(b.z_ret), Math.abs(b.z_vol)).toFixed(1)}σ` },
@@ -292,16 +432,24 @@ function Markets() {
     <div className="mx-symbols" role="tablist">{tracked.map(x => <button key={x.sym} role="tab" aria-selected={x.sym === t.sym} className={x.sym === t.sym ? 'is-on' : ''} onClick={() => setFocusSym(x.sym)}>{x.sym}{x.source === 'upload' && <em>yours</em>}</button>)}</div>
     <section className="mx-card mx-panel" key={t.sym}>
       <div className="mx-quote">
-        <div><p className="mx-eyebrow">{t.sector}</p><h1>{t.sym}</h1><p className="mx-sub">{t.name}</p></div>
-        <div className="mx-quote-p"><b>₹{price(c.c)}</b><em className={ch >= 0 ? 'is-up' : 'is-down'}>{pctStr(ch)} today</em><Score s={Math.round(riskAt(t, upto))} big /></div>
+        <div><p className="mx-eyebrow">{t.sector}</p><h1><Logo sym={t.sym} /> {t.sym}</h1><p className="mx-sub">{t.name}</p></div>
+        <div className="mx-quote-p"><b>₹{price(c.c)}</b><em className={ch >= 0 ? 'is-up' : 'is-down'}>{pctStr(ch)} today</em><Score s={Math.round(riskAt(t, upto))} big sym={t.sym} /></div>
       </div>
       <CandleChart series={t.series} upto={upto} marks={marks} height={260} />
+      {peerDay !== null && <p className="mx-peer" style={{ margin: '18px 0 12px' }}>{Math.abs(ch - peerDay) > 1.5
+        ? <><b className="is-down">Out of line with sector</b> · {t.sector} median {pctStr(peerDay)} today vs {pctStr(ch)} here.</>
+        : <><b>Moving with sector</b> · {t.sector} median {pctStr(peerDay)} today.</>}</p>}
       <div className="mx-meters">{meters.map(mt => <div key={mt.label} className="mx-meter"><span>{mt.label}</span><b>{mt.txt}</b><div className="mx-bar"><i style={{ width: `${Math.max(3, mt.v * 100)}%` }} /></div></div>)}</div>
+      <p className="mx-note" style={{ marginTop: 12 }}><Link className="mx-more" to="/guide">What do these metrics mean? Read the desk manual →</Link></p>
     </section>
     <section className="mx-card mx-panel">
       <div className="mx-panel-h"><h3>Risk through the session</h3><span>dashed band = HIGH severity threshold ({settings.thresholds.high})</span></div>
       <div className="mx-thresh-wrap"><LineChart values={riskSeries} total={t.series.length} domain={[0, 100]} color="var(--mx-accent)" height={130} label="Risk score over the session" />
         <i className="mx-thresh" style={{ top: `${8 + (1 - settings.thresholds.high / 100) * 114}px` }} /></div>
+    </section>
+    <section className="mx-card mx-panel">
+      <div className="mx-panel-h"><h3>About {t.sym}</h3><span>profile · events</span></div>
+      <StockInfoContent sym={t.sym} />
     </section>
   </div>;
 }
@@ -385,9 +533,10 @@ function Upload() {
   </div>;
 }
 
-function Slider({ label, value, min, max, step, onChange, fmt }: { label: string; value: number; min: number; max: number; step: number; onChange: (v: number) => void; fmt: (v: number) => string }) {
+function Slider({ label, hint, value, min, max, step, onChange, fmt }: { label: string; hint?: string; value: number; min: number; max: number; step: number; onChange: (v: number) => void; fmt: (v: number) => string }) {
   return <label className="mx-slider"><span>{label}</span><b>{fmt(value)}</b>
-    <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(Number(e.target.value))} style={{ ['--p' as string]: `${((value - min) / (max - min)) * 100}%` }} /></label>;
+    <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(Number(e.target.value))} style={{ ['--p' as string]: `${((value - min) / (max - min)) * 100}%` }} />
+    {hint && <em className="mx-slider-hint">{hint}</em>}</label>;
 }
 
 function LiveCard() {
@@ -464,17 +613,24 @@ function Settings() {
     <section className="mx-card mx-panel">
       <div className="mx-panel-h"><h2>Detector weights</h2><span>normalised to 100%</span></div>
       <div className="mx-mix">{(['z', 'ewma', 'iforest'] as const).map(k => <i key={k} className={`is-${k}`} style={{ flexGrow: nw[k] }} />)}</div>
-      <Slider label="Rolling Z-score" value={s.weights.z} min={0} max={1} step={0.05} onChange={v => setW('z', v)} fmt={() => `${Math.round(nw.z * 100)}%`} />
-      <Slider label="EWMA deviation" value={s.weights.ewma} min={0} max={1} step={0.05} onChange={v => setW('ewma', v)} fmt={() => `${Math.round(nw.ewma * 100)}%`} />
-      <Slider label="Isolation Forest" value={s.weights.iforest} min={0} max={1} step={0.05} onChange={v => setW('iforest', v)} fmt={() => `${Math.round(nw.iforest * 100)}%`} />
+      <Slider label="Rolling Z-score" hint="Candle-shape anomalies: return, volume and pressure vs the usual bar at this time of day." value={s.weights.z} min={0} max={1} step={0.05} onChange={v => setW('z', v)} fmt={() => `${Math.round(nw.z * 100)}%`} />
+      <Slider label="EWMA deviation" hint="Fast trend deviation from an exponentially weighted baseline." value={s.weights.ewma} min={0} max={1} step={0.05} onChange={v => setW('ewma', v)} fmt={() => `${Math.round(nw.ewma * 100)}%`} />
+      <Slider label="Isolation Forest" hint="ML outlier score across all features at once - catches combos no single metric flags." value={s.weights.iforest} min={0} max={1} step={0.05} onChange={v => setW('iforest', v)} fmt={() => `${Math.round(nw.iforest * 100)}%`} />
       <p className="mx-note">Buy/sell pressure is scored inside the Z-score detector (it is one of the candle-based features), not fused separately.</p>
     </section>
     <section className="mx-card mx-panel">
-      <div className="mx-panel-h"><h2>Detector tuning</h2></div>
-      <Slider label="Z-score threshold" value={s.zscoreThreshold} min={1.5} max={6} step={0.5} onChange={v => setSettings({ ...s, zscoreThreshold: v })} fmt={v => `${v.toFixed(1)}σ`} />
-      <Slider label="EWMA alpha (responsiveness)" value={s.ewmaAlpha} min={0.05} max={0.9} step={0.05} onChange={v => setSettings({ ...s, ewmaAlpha: v })} fmt={v => v.toFixed(2)} />
-      <Slider label="EWMA threshold" value={s.ewmaThreshold} min={1} max={5} step={0.5} onChange={v => setSettings({ ...s, ewmaThreshold: v })} fmt={v => `${v.toFixed(1)}σ`} />
-      <Slider label="Isolation Forest refit every" value={s.ifRefit} min={1} max={20} step={1} onChange={v => setSettings({ ...s, ifRefit: v })} fmt={v => `${v} batch${v > 1 ? 'es' : ''}`} />
+      <div className="mx-panel-h"><h2>Detector tuning</h2><span>how sensitive the watchdog is</span></div>
+      <div className="mx-seg is-small" style={{ marginBottom: 14 }}>
+        <span style={{ alignSelf: 'center', fontSize: 12, color: 'var(--mx-ink3)', marginRight: 4 }}>Presets</span>
+        <button onClick={() => setSettings({ ...s, zscoreThreshold: 4, minObservations: 5, ewmaAlpha: 0.2, ewmaThreshold: 3, ifRefit: 12, thresholds: { medium: 55, high: 75, critical: 88 }, cooldownBars: 8, weights: { z: 0.3, ewma: 0.2, iforest: 0.5 } })}>Conservative</button>
+        <button onClick={() => setSettings({ ...s, zscoreThreshold: 3, minObservations: 3, ewmaAlpha: 0.3, ewmaThreshold: 2.5, ifRefit: 8, thresholds: { medium: 50, high: 70, critical: 85 }, cooldownBars: 6, weights: { z: 0.35, ewma: 0.25, iforest: 0.4 } })}>Balanced</button>
+        <button onClick={() => setSettings({ ...s, zscoreThreshold: 2.5, minObservations: 2, ewmaAlpha: 0.45, ewmaThreshold: 2, ifRefit: 4, thresholds: { medium: 45, high: 65, critical: 80 }, cooldownBars: 4, weights: { z: 0.4, ewma: 0.3, iforest: 0.3 } })}>Aggressive</button>
+      </div>
+      <Slider label="Z-score threshold" hint="Standard deviations from the same time-of-day norm that count as unusual. Higher = fewer, stronger alerts." value={s.zscoreThreshold} min={1.5} max={6} step={0.5} onChange={v => setSettings({ ...s, zscoreThreshold: v })} fmt={v => `${v.toFixed(1)}σ`} />
+      <Slider label="Min history before Z-score fires" hint="Same-slot bars the detector must see before it may raise an alert. Higher = slower to cry wolf on new patterns." value={s.minObservations} min={2} max={20} step={1} onChange={v => setSettings({ ...s, minObservations: v })} fmt={v => `${v} bars`} />
+      <Slider label="EWMA alpha (responsiveness)" hint="How fast the baseline adapts. Higher reacts within a few bars; lower rides out noise." value={s.ewmaAlpha} min={0.05} max={0.9} step={0.05} onChange={v => setSettings({ ...s, ewmaAlpha: v })} fmt={v => v.toFixed(2)} />
+      <Slider label="EWMA threshold" hint="Deviation from the fast-moving baseline that counts as unusual." value={s.ewmaThreshold} min={1} max={5} step={0.5} onChange={v => setSettings({ ...s, ewmaThreshold: v })} fmt={v => `${v.toFixed(1)}σ`} />
+      <Slider label="Isolation Forest refit every" hint="Retrain the ML model on strictly-prior history every N batches. 1 = strictest and slowest; larger = more responsive." value={s.ifRefit} min={1} max={20} step={1} onChange={v => setSettings({ ...s, ifRefit: v })} fmt={v => `${v} batch${v > 1 ? 'es' : ''}`} />
     </section>
     <section className="mx-card mx-panel">
       <div className="mx-panel-h"><h2>Sudden-move notifications</h2><span>min severity {s.minSeverity}</span></div>
@@ -483,6 +639,7 @@ function Settings() {
       <div className="mx-actions" style={{ marginTop: 12 }}><button className="mx-btn" onClick={testToast}>Send a test alert</button><button className="mx-btn is-ghost" onClick={() => setSettings({ ...s, minScore: 50, thresholds: { medium: 50, high: 70, critical: 85 }, cooldownBars: 6, zscoreThreshold: 3, ewmaAlpha: 0.3, ewmaThreshold: 2.5, ifRefit: 8, weights: { z: 0.35, ewma: 0.25, iforest: 0.4 } })}>Reset to defaults</button></div>
       <p className="mx-note">HIGH and CRITICAL alerts post to the webhook above. Connect Slack, Telegram or WhatsApp through any webhook bridge.</p>
     </section>
+    <ProfilesCard />
     <LiveCard />
     <RulesCard />
     <section className="mx-card mx-panel">
@@ -492,7 +649,142 @@ function Settings() {
   </div>;
 }
 
+function Cases() {
+  const { cases, addCase, updateCase, removeCase, alerts, select } = useStore();
+  const nav = useNavigate();
+  const [title, setTitle] = useState('');
+  const [owner, setOwner] = useState('');
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [noteText, setNoteText] = useState('');
+  const cur = cases.find(c => c.id === openId) ?? null;
+  const exportCsv = (c: CaseFile) => {
+    const rows = [['case', 'owner', 'status', 'created'], [c.title, c.owner, c.status, c.created], [],
+      ['alert_id', 'symbol', 'date', 'time', 'risk', 'severity', 'state', 'top_reason']];
+    for (const id of c.alertIds) {
+      const a = alerts.find(x => x.id === id);
+      if (a) rows.push([a.id, a.sym, a.date, a.t, String(a.score), a.sev, a.state, a.reasons[0] ?? '']);
+    }
+    rows.push([], ['notes']);
+    for (const n of c.notes) rows.push([n.ts, n.text]);
+    const csv = rows.map(r => r.map(x => `"${String(x).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+    const link = Object.assign(document.createElement('a'), { href: url, download: `${c.title.replace(/[^a-z0-9]+/gi, '-').toLowerCase() || 'case'}.csv` });
+    link.click(); URL.revokeObjectURL(url);
+  };
+  return <div className="mx-stack">
+    <div className="mx-page-h"><div><p className="mx-eyebrow">Investigations</p><h1>Case files</h1><p className="mx-sub">Group related alerts into one investigation with an owner and notes, like a surveillance desk would. Stored on this device.</p></div></div>
+    <section className="mx-card mx-panel">
+      <div className="mx-panel-h"><h2>New case</h2></div>
+      <div style={{ display: 'grid', gap: 8 }}>
+        <input className="mx-input" placeholder="Case title, e.g. Adani group morning spike" value={title} onChange={e => setTitle(e.target.value)} />
+        <input className="mx-input" placeholder="Owner (analyst name)" value={owner} onChange={e => setOwner(e.target.value)} />
+        <button className="mx-btn is-primary" disabled={!title.trim()} onClick={() => { addCase(title, owner); setTitle(''); setOwner(''); }}>Open case</button>
+      </div>
+    </section>
+    {cases.map((c, i) => {
+      const linked = c.alertIds.map(id => alerts.find(a => a.id === id)).filter((a): a is Alert => Boolean(a));
+      const expanded = cur?.id === c.id;
+      return <section key={c.id} className="mx-card mx-panel" style={{ ['--i' as string]: i }}>
+        <div className="mx-panel-h"><h2>{c.title}</h2><span className={`mx-pill ${c.status === 'open' ? 'is-open' : 'is-resolved'}`}>{c.status}</span></div>
+        <p className="mx-note" style={{ marginTop: 0 }}>Owner: {c.owner || 'unassigned'} · opened {new Date(c.created).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} · {c.alertIds.length} alert{c.alertIds.length === 1 ? '' : 's'}</p>
+        <div className="mx-actions">
+          <button className="mx-btn" onClick={() => setOpenId(expanded ? null : c.id)}>{expanded ? 'Close view' : 'Review'}</button>
+          <button className="mx-btn" disabled={!c.alertIds.length} onClick={() => exportCsv(c)}>Export CSV</button>
+          <button className="mx-btn" onClick={() => updateCase(c.id, { status: c.status === 'open' ? 'closed' : 'open' })}>{c.status === 'open' ? 'Mark closed' : 'Reopen'}</button>
+          <button className="mx-btn is-ghost" onClick={() => removeCase(c.id)}>Delete</button>
+        </div>
+        {expanded && <>
+          {linked.map((a, k) => <article key={a.id} className="mx-alert" style={{ ['--i' as string]: k, cursor: 'pointer' }} onClick={() => { select(a.id); nav('/alert'); }}>
+            <div className="mx-alert-top"><Logo sym={a.sym} /><Score s={a.score} sym={a.sym} /><div className="mx-alert-id"><b>{a.sym}</b><span>{a.date} {a.t} · {pctStr(a.move)}</span></div></div>
+          </article>)}
+          {!linked.length && <p className="mx-empty">No alerts attached yet. Open an alert and use "Add to case".</p>}
+          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+            <input className="mx-input" placeholder="Add a case note" value={noteText} onChange={e => setNoteText(e.target.value)} />
+            <button className="mx-btn" disabled={!noteText.trim()} onClick={() => { updateCase(c.id, { notes: [...c.notes, { ts: new Date().toISOString(), text: noteText.trim() }] }); setNoteText(''); }}>Add</button>
+          </div>
+          <ul className="mx-log">{[...c.notes].reverse().map((n, k) => <li key={n.ts + k}><time>{fmtLogTime(n.ts)}</time>{n.text}</li>)}</ul>
+        </>}
+      </section>;
+    })}
+    {!cases.length && <p className="mx-empty">No cases yet. Open one above, then attach alerts from any alert's page.</p>}
+  </div>;
+}
+
+function ProfilesCard() {
+  const { profiles, setProfile, tracked, settings } = useStore();
+  const [sym, setSym] = useState('');
+  const live = tracked.filter(t => t.source === 'live');
+  const [m, setM] = useState(''); const [h, setH] = useState(''); const [cr, setCr] = useState('');
+  const add = () => {
+    if (!sym) return;
+    const p: WatchProfile = {
+      medium: Math.min(Number(m) || settings.thresholds.medium, 95),
+      high: Math.min(Number(h) || settings.thresholds.high, 98),
+      critical: Math.min(Number(cr) || settings.thresholds.critical, 100),
+    };
+    setProfile(sym, p); setSym(''); setM(''); setH(''); setCr('');
+  };
+  return <section className="mx-card mx-panel">
+    <div className="mx-panel-h"><h2>Per-symbol watch profiles</h2><span>{Object.keys(profiles).length} custom</span></div>
+    <p className="mx-sub" style={{ marginTop: 0 }}>Stricter or looser tiers for individual names - e.g. a volatile SUZLON vs a steady HDFCBANK. Affects tier colours, the backtest and your queue on this device; server-side severity still uses the global thresholds above.</p>
+    {Object.entries(profiles).map(([s, p]) => <div key={s} className="mx-prof-row">
+      <div><Logo sym={s} /> <b>{s}</b> <span className="mx-note" style={{ display: 'block' }}>MED {p.medium} · HIGH {p.high} · CRIT {p.critical}</span></div>
+      <button className="mx-btn is-ghost" onClick={() => setProfile(s, null)}>Remove</button>
+    </div>)}
+    <div style={{ display: 'grid', gap: 8, marginTop: 12 }}>
+      <select className="mx-input" value={sym} onChange={e => setSym(e.target.value)}>
+        <option value="">Pick a symbol…</option>
+        {live.filter(t => !profiles[t.sym]).map(t => <option key={t.sym} value={t.sym}>{t.sym}</option>)}
+      </select>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <input className="mx-input" style={{ width: 112 }} type="number" placeholder={`MED ${settings.thresholds.medium}`} value={m} onChange={e => setM(e.target.value)} />
+        <input className="mx-input" style={{ width: 112 }} type="number" placeholder={`HIGH ${settings.thresholds.high}`} value={h} onChange={e => setH(e.target.value)} />
+        <input className="mx-input" style={{ width: 112 }} type="number" placeholder={`CRIT ${settings.thresholds.critical}`} value={cr} onChange={e => setCr(e.target.value)} />
+        <button className="mx-btn" disabled={!sym} onClick={add}>Add profile</button>
+      </div>
+    </div>
+  </section>;
+}
+
 const LOAD_STAGES = ['Connecting to the API', 'Reading settings and symbol universe', 'Running Z-score, EWMA and Isolation Forest over the curated history', 'Loading per-bar scores and alerts'];
+
+
+const GUIDE_METRICS = [
+  { t: 'The 0-100 risk score', pills: ['fused', 'per bar'], d: 'Every 5-minute bar gets one score blending the three detectors below using the weights in Settings. Severity tiers come from your thresholds: below MEDIUM is calm (blue), MEDIUM is watch (white), HIGH and CRITICAL are act (red). A cooldown (default 30 min per symbol) stops repeat alerts for the same move.' },
+  { t: 'Rolling Z-score', pills: ['default weight 35%'], d: 'Compares each bar\'s return, volume and buy/sell pressure against the same time-of-day over recent sessions - 09:35 bars are judged against other 09:35 bars. Fires when |z| reaches the threshold (default 3σ). Needs a minimum history of same-slot bars before it may speak.' },
+  { t: 'EWMA deviation', pills: ['default weight 25%'], d: 'An exponentially weighted baseline that reacts fast to fresh moves. Alpha is the memory: 0.3 is balanced, 0.9 barely remembers the last bar. Fires when the deviation from this baseline crosses its threshold (default 2.5σ).' },
+  { t: 'Isolation Forest', pills: ['default weight 40%'], d: 'A machine-learning model that learns what "normal" looks like across all features at once, then flags bars whose combination of moves looks nothing like history - even when no single metric is extreme. Retrained walk-forward on strictly-prior data so it never peeks ahead.' },
+  { t: 'Features analysed', pills: ['per bar'], d: 'Log return, volume ratio vs the same-slot average, Parkinson high-low volatility, and a buy/sell pressure proxy from where the close sits inside the bar\'s range. Detector agreement (how many detectors fire together) is shown on each alert.' },
+  { t: 'Alert lifecycle', pills: ['audit log'], d: 'Open → Acknowledged → Escalated or Resolved. Every transition accepts a note and is written to the alert\'s audit log. Escalated alerts stand out in red in the queue; resolved ones fade.' },
+  { t: 'Trigger rules', pills: ['guidance'], d: 'Simple lines in the sand: price above/below, one-bar jump or drop, volume spike, fused risk, z-score, buy/sell pressure. They evaluate on every new bar from live polling or uploads and surface as guidance cards on the Command page.' },
+  { t: 'Backtest', pills: ['on Command'], d: 'Replays the loaded history bar-by-bar with your current thresholds, per-symbol profiles and cooldown, and shows how many alerts would fire per session, how many reached HIGH, and what share landed on low-signal bars. Use it to sanity-check a tuning change before trusting it.' },
+  { t: 'Watch profiles + cases', pills: ['per symbol', 'investigations'], d: 'Per-symbol profiles loosen or tighten tiers for individual names (a volatile SUZLON vs a steady HDFCBANK). Case files group related alerts under one owner with notes and a CSV export for the investigation trail.' },
+  { t: 'Data sources', pills: ['replay', 'upload', 'live'], d: 'The Command replay animates curated NSE history. Your own CSV or Parquet goes through Your data and is validated twice (browser + server). Live polling pulls delayed Yahoo Finance bars on an interval from Settings. Nothing here places trades - it is decision support, not investment advice.' },
+];
+
+function Guide() {
+  return <div className="mx-stack mx-guide">
+    <div className="mx-page-h"><div><p className="mx-eyebrow">Desk manual</p><h1>How to read MarketWatch</h1><p className="mx-sub">Every number on this terminal, in plain English - what it measures, when it fires, and how to tune it in Settings.</p></div></div>
+    <section className="mx-card mx-panel">
+      <div className="mx-panel-h"><h2>Your 5-minute workflow</h2></div>
+      <ol className="mx-reasons">
+        <li style={{ ['--i' as string]: 0 }}><b>Command</b> - watch the risk radar. Darker cells are riskier; red cells are bars that need eyes now.</li>
+        <li style={{ ['--i' as string]: 1 }}><b>Alerts</b> - triage the analyst queue, highest fused score first. Filter by state or severity.</li>
+        <li style={{ ['--i' as string]: 2 }}><b>Why?</b> - open any alert for plain-English factors and how much each detector contributed.</li>
+        <li style={{ ['--i' as string]: 3 }}><b>Act</b> - Acknowledge, Escalate or Resolve. Cooldown keeps one move from spamming the queue.</li>
+        <li style={{ ['--i' as string]: 4 }}><b>Arm rules</b> - set trigger levels in Settings so the levels you care about page you first.</li>
+      </ol>
+    </section>
+    <div className="mx-grid2">
+      {GUIDE_METRICS.map((m, i) => <section key={m.t} className="mx-card mx-panel" style={{ ['--i' as string]: i + 1 }}>
+        <div className="mx-panel-h"><h3>{m.t}</h3></div>
+        <div style={{ marginBottom: 8 }}>{m.pills.map(p => <span key={p} className="mx-pill" style={{ marginRight: 6 }}>{p}</span>)}</div>
+        <p className="mx-sub" style={{ marginTop: 0 }}>{m.d}</p>
+      </section>)}
+    </div>
+    <p className="mx-note">Statistical decision support for surveillance analysts. Not investment advice; no trades are placed.</p>
+  </div>;
+}
 
 function Loader() {
   const { stage, loadError } = useStore();
@@ -536,6 +828,8 @@ function Shell() {
         <Route path="/alert" element={<AlertDetail />} />
         <Route path="/markets" element={<Markets />} />
         <Route path="/upload" element={<Upload />} />
+        <Route path="/cases" element={<Cases />} />
+        <Route path="/guide" element={<Guide />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="*" element={<Command />} />
       </Routes>
