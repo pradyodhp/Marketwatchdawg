@@ -322,3 +322,48 @@ buying/selling pressure: `(close - open) / (high - low)`, in [-1, 1], where
 +1 means the bar closed at its high (buying pressure) and -1 at its low.
 It feeds the Z-score, EWMA, and Isolation Forest detectors alongside price,
 volume, and volatility features.
+
+---
+
+## 🖥️ React Front End (`web/`)
+
+An animated React + TypeScript front end (Vite) now sits alongside the
+Streamlit dashboard and talks only to the FastAPI backend. Same detectors,
+same risk scores, same alerts — rendered with the MarketWatch AI command
+center UI (Command, Alerts, Alert detail, Markets, Your data, Settings).
+
+### Run it
+
+```bash
+# 1. sample data (one-off; skip if you have real curated data)
+python scripts/generate_sample_data.py
+
+# 2. backend (serves the API and, once built, the React app at /app)
+uvicorn marketwatch.api:create_app --factory --host 0.0.0.0 --port 8000
+
+# 3a. production: build the front end once, then open http://localhost:8000/app/
+cd web && npm install && npm run build
+
+# 3b. development: hot-reload dev server on http://localhost:5173/app/
+cd web && npm run dev
+```
+
+`POST /detect` runs the full-history detection pass (cached; ~20s for the
+12-symbol sample set, instant afterwards). `GET /scores` feeds the charts,
+`GET /alerts` + `PATCH /alerts/{id}` power the analyst queue
+(acknowledge / escalate / resolve / reopen with notes), and
+`GET`/`PUT /settings` persists tuning to `configs/settings.yaml` and
+re-scores server-side.
+
+### Front-end tests
+
+```bash
+cd web && npm test        # vitest
+npm run build             # type-check + production bundle
+```
+
+The classic Streamlit dashboard (`frontend/`) still works unchanged:
+
+```bash
+streamlit run frontend/app.py
+```

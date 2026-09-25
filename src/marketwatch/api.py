@@ -15,7 +15,7 @@ from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, field_validator, ConfigDict, Field
 
 from marketwatch.alert_engine import AlertEngine, AlertState
 from marketwatch.config.settings import (
@@ -174,6 +174,15 @@ class SettingsUpdate(BaseModel):
     cooldown: CooldownSettings | None = None
     notifications: NotificationSettings | None = None
     replay: ReplaySettings | None = None
+
+    @field_validator("cooldown", mode="before")
+    @classmethod
+    def _strip_derived_cooldown_fields(cls, value: Any) -> Any:
+        # GET /settings exposes the derived "minutes" alongside "window_bars";
+        # accept it on round-trips but do not persist it.
+        if isinstance(value, dict):
+            value = {k: v for k, v in value.items() if k != "minutes"}
+        return value
 
 
 class SettingsResponse(BaseModel):
