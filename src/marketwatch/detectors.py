@@ -60,10 +60,112 @@ class ZScoreDetector:
             "parkinson_volatility",
             "market_excess_return",
             "sector_excess_return",
+            "buy_sell_pressure",
         )
         self.threshold = float(threshold)
         self.min_observations = max(1, int(min_observations))
         self.baseline_engine = TODBaselineEngine(min_observations=self.min_observations)
+        # Incremental state: signals for a feature depend only on strictly
+        # earlier observations, so once computed they never change.  Cache the
+        # per-symbol signal prefix and the per-slot baseline buckets; repeated
+        # detect() calls over a growing (append-only) history then cost O(new).
+        self._signals_cache: dict[str, list[AnomalySignal]] = {}
+        self._buckets: dict[tuple[str, str], dict[int, list[float]]] = defaultdict(
+            lambda: defaultdict(list)
+        )
+        self._processed_count: dict[str, int] = {}
+        self._last_feature: dict[str, FeatureSet] = {}
+
+    def _reset_symbol_state(self, symbol: str) -> None:
+        self._signals_cache.pop(symbol, None)
+        self._processed_count.pop(symbol, None)
+        self._last_feature.pop(symbol, None)
+        for key in [key for key in self._buckets if key[0] == symbol]:
+            self._buckets.pop(key, None)
+
+    def _process_feature(self, symbol_name: str, feature: FeatureSet) -> list[AnomalySignal]:
+        """Score one feature against strictly-prior per-slot baselines."""
+        signals: list[AnomalySignal] = []
+        for feature_name in self.feature_names:
+            current_value = _safe_float(getattr(feature, feature_name, None), default=0.0)
+            bucket = self._buckets[(symbol_name, feature_name)]
+            baseline = self.baseline_engine._summarize(
+                symbol_name,
+                feature_name,
+                feature.slot_index,
+                bucket.get(feature.slot_index, []),
+            )
+            bucket[feature.slot_index].append(current_value)
+            if not baseline.valid or baseline.count < self.min_observations:
+                signals.append(
+                    AnomalySignal(
+                        detector_name="ZScoreDetector",
+                        symbol=symbol_name,
+                        timestamp=feature.timestamp,
+                        slot_index=feature.slot_index,
+                        feature_name=feature_name,
+                        value=current_value,
+                        baseline_value=baseline.mean,
+                        baseline_mean=baseline.mean,
+                        baseline_std=baseline.std,
+                        statistic=0.0,
+                        z_score=0.0,
+                        threshold=self.threshold,
+                        severity=AnomalySeverity.LOW,
+                        anomaly=False,
+                        direction=0.0,
+                        is_valid=False,
+                        reason="insufficient_history",
+                        metadata={
+                            "baseline_count": baseline.count,
+                            "baseline_slot_index": baseline.slot_index,
+                            "detector_type": "z_score",
+                        },
+                    )
+                )
+                continue
+
+            std = baseline.std
+            if std <= 1e-8:
+                deviation = current_value - baseline.mean
+                statistic = 0.0
+                z_score = 0.0
+            else:
+                deviation = current_value - baseline.mean
+                statistic = deviation / std
+                z_score = statistic
+
+            anomaly = abs(z_score) >= self.threshold
+            direction = math.copysign(1.0, z_score) if z_score != 0 else 0.0
+            severity = _severity_from_statistic(z_score, threshold=self.threshold)
+            signals.append(
+                AnomalySignal(
+                    detector_name="ZScoreDetector",
+                    symbol=symbol_name,
+                    timestamp=feature.timestamp,
+                    slot_index=feature.slot_index,
+                    feature_name=feature_name,
+                    value=current_value,
+                    baseline_value=baseline.mean,
+                    baseline_mean=baseline.mean,
+                    baseline_std=baseline.std,
+                    statistic=z_score,
+                    z_score=z_score,
+                    threshold=self.threshold,
+                    severity=severity if anomaly else AnomalySeverity.LOW,
+                    anomaly=anomaly,
+                    direction=direction,
+                    is_valid=True,
+                    reason=None,
+                    metadata={
+                        "baseline_count": baseline.count,
+                        "baseline_slot_index": baseline.slot_index,
+                        "deviation": deviation,
+                        "detector_type": "z_score",
+                    },
+                )
+            )
+        return signals
 
     def detect(
         self,
@@ -84,79 +186,21 @@ class ZScoreDetector:
 
         signals: list[AnomalySignal] = []
         for symbol_name, features in grouped.items():
-            for feature in features:
-                for feature_name in self.feature_names:
-                    current_value = _safe_float(getattr(feature, feature_name, None), default=0.0)
-                    baseline = self.baseline_engine.baseline_for_feature(feature, features, feature_name)
-                    if not baseline.valid or baseline.count < self.min_observations:
-                        signals.append(
-                            AnomalySignal(
-                                detector_name="ZScoreDetector",
-                                symbol=symbol_name,
-                                timestamp=feature.timestamp,
-                                slot_index=feature.slot_index,
-                                feature_name=feature_name,
-                                value=current_value,
-                                baseline_value=baseline.mean,
-                                baseline_mean=baseline.mean,
-                                baseline_std=baseline.std,
-                                statistic=0.0,
-                                z_score=0.0,
-                                threshold=self.threshold,
-                                severity=AnomalySeverity.LOW,
-                                anomaly=False,
-                                direction=0.0,
-                                is_valid=False,
-                                reason="insufficient_history",
-                                metadata={
-                                    "baseline_count": baseline.count,
-                                    "baseline_slot_index": baseline.slot_index,
-                                    "detector_type": "z_score",
-                                },
-                            )
-                        )
-                        continue
-
-                    std = baseline.std
-                    if std <= 1e-8:
-                        deviation = current_value - baseline.mean
-                        statistic = 0.0
-                        z_score = 0.0
-                    else:
-                        deviation = current_value - baseline.mean
-                        statistic = deviation / std
-                        z_score = statistic
-
-                    anomaly = abs(z_score) >= self.threshold
-                    direction = math.copysign(1.0, z_score) if z_score != 0 else 0.0
-                    severity = _severity_from_statistic(z_score, threshold=self.threshold)
-                    signals.append(
-                        AnomalySignal(
-                            detector_name="ZScoreDetector",
-                            symbol=symbol_name,
-                            timestamp=feature.timestamp,
-                            slot_index=feature.slot_index,
-                            feature_name=feature_name,
-                            value=current_value,
-                            baseline_value=baseline.mean,
-                            baseline_mean=baseline.mean,
-                            baseline_std=baseline.std,
-                            statistic=z_score,
-                            z_score=z_score,
-                            threshold=self.threshold,
-                            severity=severity if anomaly else AnomalySeverity.LOW,
-                            anomaly=anomaly,
-                            direction=direction,
-                            is_valid=True,
-                            reason=None,
-                            metadata={
-                                "baseline_count": baseline.count,
-                                "baseline_slot_index": baseline.slot_index,
-                                "deviation": deviation,
-                                "detector_type": "z_score",
-                            },
-                        )
-                    )
+            processed = self._processed_count.get(symbol_name, 0)
+            # Incremental path only when the previously processed prefix is
+            # unchanged (same objects, append-only growth); otherwise recompute.
+            if processed > len(features) or (
+                processed > 0 and features[processed - 1] is not self._last_feature[symbol_name]
+            ):
+                self._reset_symbol_state(symbol_name)
+                processed = 0
+            cache = self._signals_cache.setdefault(symbol_name, [])
+            for feature in features[processed:]:
+                cache.extend(self._process_feature(symbol_name, feature))
+            if features:
+                self._processed_count[symbol_name] = len(features)
+                self._last_feature[symbol_name] = features[-1]
+            signals.extend(cache)
 
         return signals
 
@@ -178,10 +222,91 @@ class EWMADetector:
             "parkinson_volatility",
             "market_excess_return",
             "sector_excess_return",
+            "buy_sell_pressure",
         )
         self.alpha = max(0.0, min(1.0, float(alpha)))
         self.threshold = float(threshold)
         self.min_periods = max(1, int(min_periods))
+        # Incremental state (same contract as ZScoreDetector): EWMA signals are
+        # a pure forward pass, so cached prefixes stay valid as history grows.
+        self._signals_cache: dict[str, list[AnomalySignal]] = {}
+        self._states: dict[tuple[str, str], DetectorState] = {}
+        self._processed_count: dict[str, int] = {}
+        self._last_feature: dict[str, FeatureSet] = {}
+
+    def _reset_symbol_state(self, symbol: str) -> None:
+        self._signals_cache.pop(symbol, None)
+        self._processed_count.pop(symbol, None)
+        self._last_feature.pop(symbol, None)
+        for key in [key for key in self._states if key[0] == symbol]:
+            self._states.pop(key, None)
+
+    def _process_feature(self, feature: FeatureSet) -> list[AnomalySignal]:
+        """Advance the EWMA pass by one feature and emit its signals."""
+        signals: list[AnomalySignal] = []
+        for feature_name in self.feature_names:
+            current_value = _safe_float(getattr(feature, feature_name, None), default=0.0)
+            key = (feature.symbol, feature_name)
+            prior = self._states.get(key)
+
+            if prior is None:
+                current_mean = current_value
+                variance = 0.0
+                count = 1
+                deviation = 0.0
+                statistic = 0.0
+                anomaly = False
+                severity = AnomalySeverity.LOW
+                is_valid = False
+                reason = "warmup_initialization"
+                baseline_value = current_value
+                baseline_std = 0.0
+            else:
+                previous_mean = prior.mean
+                previous_variance = prior.variance
+                current_mean = self.alpha * current_value + (1 - self.alpha) * previous_mean
+                variance = self.alpha * (current_value - previous_mean) ** 2 + (1 - self.alpha) * previous_variance
+                deviation = current_value - previous_mean
+                baseline_std = math.sqrt(max(variance, 0.0))
+                baseline_value = previous_mean
+                statistic = deviation / baseline_std if baseline_std > 1e-8 else 0.0
+                count = prior.count + 1
+                is_valid = count >= self.min_periods
+                anomaly = is_valid and abs(statistic) >= self.threshold
+                severity = _severity_from_statistic(statistic, threshold=self.threshold) if anomaly else AnomalySeverity.LOW
+                reason = None if is_valid else "insufficient_history"
+
+            signals.append(
+                AnomalySignal(
+                    detector_name="EWMADetector",
+                    symbol=feature.symbol,
+                    timestamp=feature.timestamp,
+                    slot_index=feature.slot_index,
+                    feature_name=feature_name,
+                    value=current_value,
+                    baseline_value=baseline_value,
+                    baseline_mean=current_mean if prior is not None else current_value,
+                    baseline_std=baseline_std,
+                    statistic=statistic,
+                    z_score=statistic,
+                    threshold=self.threshold,
+                    severity=severity,
+                    anomaly=anomaly,
+                    direction=math.copysign(1.0, statistic) if statistic != 0 else 0.0,
+                    is_valid=is_valid,
+                    reason=reason,
+                    metadata={
+                        "alpha": self.alpha,
+                        "ewma_mean": current_mean,
+                        "ewma_variance": variance,
+                        "detector_type": "ewma",
+                        "count": count,
+                    },
+                )
+            )
+
+            self._states[key] = DetectorState(mean=current_mean, variance=variance, count=count)
+        return signals
 
     def detect(
         self,
@@ -194,74 +319,27 @@ class EWMADetector:
             return []
 
         ordered = sorted(feature_history, key=lambda f: (f.timestamp, f.symbol, f.slot_index))
-        states: dict[tuple[str, str], DetectorState] = {}
-        signals: list[AnomalySignal] = []
-
+        grouped: dict[str, list[FeatureSet]] = defaultdict(list)
         for feature in ordered:
             if symbol is not None and feature.symbol != symbol:
                 continue
-            for feature_name in self.feature_names:
-                current_value = _safe_float(getattr(feature, feature_name, None), default=0.0)
-                key = (feature.symbol, feature_name)
-                prior = states.get(key)
+            grouped[feature.symbol].append(feature)
 
-                if prior is None:
-                    current_mean = current_value
-                    variance = 0.0
-                    count = 1
-                    deviation = 0.0
-                    statistic = 0.0
-                    anomaly = False
-                    severity = AnomalySeverity.LOW
-                    is_valid = False
-                    reason = "warmup_initialization"
-                    baseline_value = current_value
-                    baseline_std = 0.0
-                else:
-                    previous_mean = prior.mean
-                    previous_variance = prior.variance
-                    current_mean = self.alpha * current_value + (1.0 - self.alpha) * previous_mean
-                    variance = self.alpha * (current_value - previous_mean) ** 2 + (1.0 - self.alpha) * previous_variance
-                    deviation = current_value - previous_mean
-                    baseline_std = math.sqrt(max(variance, 0.0))
-                    baseline_value = previous_mean
-                    statistic = deviation / baseline_std if baseline_std > 1e-8 else 0.0
-                    count = prior.count + 1
-                    is_valid = count >= self.min_periods
-                    anomaly = is_valid and abs(statistic) >= self.threshold
-                    severity = _severity_from_statistic(statistic, threshold=self.threshold) if anomaly else AnomalySeverity.LOW
-                    reason = None if is_valid else "insufficient_history"
-
-                signals.append(
-                    AnomalySignal(
-                        detector_name="EWMADetector",
-                        symbol=feature.symbol,
-                        timestamp=feature.timestamp,
-                        slot_index=feature.slot_index,
-                        feature_name=feature_name,
-                        value=current_value,
-                        baseline_value=baseline_value,
-                        baseline_mean=current_mean if prior is not None else current_value,
-                        baseline_std=baseline_std,
-                        statistic=statistic,
-                        z_score=statistic,
-                        threshold=self.threshold,
-                        severity=severity,
-                        anomaly=anomaly,
-                        direction=math.copysign(1.0, statistic) if statistic != 0 else 0.0,
-                        is_valid=is_valid,
-                        reason=reason,
-                        metadata={
-                            "alpha": self.alpha,
-                            "ewma_mean": current_mean,
-                            "ewma_variance": variance,
-                            "detector_type": "ewma",
-                            "count": count,
-                        },
-                    )
-                )
-
-                states[key] = DetectorState(mean=current_mean, variance=variance, count=count)
+        signals: list[AnomalySignal] = []
+        for symbol_name, features in grouped.items():
+            processed = self._processed_count.get(symbol_name, 0)
+            if processed > len(features) or (
+                processed > 0 and features[processed - 1] is not self._last_feature[symbol_name]
+            ):
+                self._reset_symbol_state(symbol_name)
+                processed = 0
+            cache = self._signals_cache.setdefault(symbol_name, [])
+            for feature in features[processed:]:
+                cache.extend(self._process_feature(feature))
+            if features:
+                self._processed_count[symbol_name] = len(features)
+                self._last_feature[symbol_name] = features[-1]
+            signals.extend(cache)
 
         return signals
 

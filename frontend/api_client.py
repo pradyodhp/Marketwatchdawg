@@ -29,6 +29,21 @@ class APIClient:
     def stocks(self) -> dict[str, Any]:
         return self._get("/stocks")
 
+    def candles(self, symbol: str, limit: int = 1500) -> dict[str, Any]:
+        return self._get("/candles", symbol=symbol, limit=str(limit))
+
+    def ingest(self, symbol: str, data: bytes, *, is_parquet: bool = False) -> dict[str, Any]:
+        content_type = "application/x-parquet" if is_parquet else "text/csv"
+        response = httpx.post(
+            f"{self.base_url}/ingest",
+            params={"symbol": symbol},
+            content=data,
+            headers={"content-type": content_type},
+            timeout=max(self.timeout, 30.0),
+        )
+        response.raise_for_status()
+        return response.json()
+
     def alerts(self, symbol: str | None = None, state: str | None = None) -> list[dict[str, Any]]:
         params = {
             key: value

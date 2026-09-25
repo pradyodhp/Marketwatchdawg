@@ -209,6 +209,6 @@ def test_downstream_detector_compatibility():
         None,
     )
 
-    assert set(feature.raw_features) == {"log_return", "volume_ratio", "parkinson_volatility", "market_excess_return", "sector_excess_return"}
+    assert set(feature.raw_features) == {"log_return", "volume_ratio", "parkinson_volatility", "market_excess_return", "sector_excess_return", "buy_sell_pressure"}
     assert feature.raw_features["volume_ratio"] >= 0.0
     assert feature.parkinson_volatility >= 0.0

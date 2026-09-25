@@ -114,12 +114,23 @@ class FeaturePipeline:
         market_excess_return = log_return - market_return
         sector_excess_return = log_return - sector_return
 
+        # Order-imbalance / buying-selling pressure proxy (documented proxy:
+        # true order-flow imbalance needs level-2 trade data, which OHLCV does
+        # not carry). Close location within the bar's range, in [-1, 1]:
+        # +1 = closed at the high (buying pressure), -1 = closed at the low.
+        candle_range = _safe_float(candle.high) - _safe_float(candle.low)
+        if candle_range > 0:
+            buy_sell_pressure = (_safe_float(candle.close) - _safe_float(candle.open)) / candle_range
+        else:
+            buy_sell_pressure = 0.0
+
         raw_features = {
             "log_return": _safe_float(log_return),
             "volume_ratio": _safe_float(volume_ratio),
             "parkinson_volatility": _safe_float(parkinson_volatility),
             "market_excess_return": _safe_float(market_excess_return),
             "sector_excess_return": _safe_float(sector_excess_return),
+            "buy_sell_pressure": _safe_float(buy_sell_pressure),
         }
 
         return FeatureSet(
@@ -131,6 +142,7 @@ class FeaturePipeline:
             parkinson_volatility=raw_features["parkinson_volatility"],
             market_excess_return=raw_features["market_excess_return"],
             sector_excess_return=raw_features["sector_excess_return"],
+            buy_sell_pressure=raw_features["buy_sell_pressure"],
             raw_features=raw_features,
         )
 

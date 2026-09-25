@@ -23,6 +23,7 @@ class AlertState(str, Enum):
 
     NEW = "NEW"
     ACKNOWLEDGED = "ACKNOWLEDGED"
+    ESCALATED = "ESCALATED"
     RESOLVED = "RESOLVED"
 
 
@@ -34,6 +35,7 @@ class AlertEvent(BaseModel):
     timestamp: datetime
     from_state: AlertState | None = None
     to_state: AlertState
+    note: str | None = None
 
     @field_validator("timestamp")
     @classmethod
@@ -74,6 +76,29 @@ class SurveillanceAlert(BaseModel):
 _TRANSITIONS = {
     AlertState.NEW: AlertState.ACKNOWLEDGED,
     AlertState.ACKNOWLEDGED: AlertState.RESOLVED,
+}
+
+# Rich analyst lifecycle used by the API/UI layer.  `transition()` above stays
+# the strict linear machine; `update_state()` allows escalation and reopening.
+_UPDATE_TRANSITIONS: dict[str, dict[AlertState, AlertState]] = {
+    "acknowledge": {
+        AlertState.NEW: AlertState.ACKNOWLEDGED,
+        AlertState.ESCALATED: AlertState.ACKNOWLEDGED,
+    },
+    "escalate": {
+        AlertState.NEW: AlertState.ESCALATED,
+        AlertState.ACKNOWLEDGED: AlertState.ESCALATED,
+    },
+    "resolve": {
+        AlertState.NEW: AlertState.RESOLVED,
+        AlertState.ACKNOWLEDGED: AlertState.RESOLVED,
+        AlertState.ESCALATED: AlertState.RESOLVED,
+    },
+    "reopen": {
+        AlertState.ACKNOWLEDGED: AlertState.NEW,
+        AlertState.ESCALATED: AlertState.NEW,
+        AlertState.RESOLVED: AlertState.NEW,
+    },
 }
 
 
@@ -180,6 +205,42 @@ class AlertEngine:
                         timestamp=event_time,
                         from_state=alert.state,
                         to_state=target,
+                    ),
+                ),
+            }
+        )
+        self._alerts[alert_id] = updated
+        return updated
+
+    def update_state(
+        self,
+        alert_id: str,
+        action: str,
+        *,
+        note: str | None = None,
+        timestamp: datetime | None = None,
+    ) -> SurveillanceAlert:
+        """Apply a rich analyst lifecycle action (acknowledge/escalate/resolve/reopen)."""
+        alert = self._alerts.get(alert_id)
+        if alert is None:
+            raise KeyError(f"unknown alert: {alert_id}")
+        targets = _UPDATE_TRANSITIONS.get(action)
+        if targets is None:
+            raise ValueError(f"unknown alert action: {action}")
+        target = targets.get(alert.state)
+        if target is None:
+            raise ValueError(f"invalid alert action: {action} from {alert.state.value}")
+        event_time = timestamp or alert.timestamp
+        updated = alert.model_copy(
+            update={
+                "state": target,
+                "history": alert.history
+                + (
+                    AlertEvent(
+                        timestamp=event_time,
+                        from_state=alert.state,
+                        to_state=target,
+                        note=note,
                     ),
                 ),
             }

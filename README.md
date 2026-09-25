@@ -279,3 +279,120 @@ Runtime Provider
      │
      ▼
 Replay / Detection
+
+---
+
+## 📥 Adding Your Own Market Data
+
+The monitored universe is not fixed. Upload 5-minute OHLCV bars for any symbol
+and it flows through the same detectors, risk scoring, and alerting:
+
+- **API:** `POST /ingest?symbol=RELIANCE.NS` with a CSV or Parquet body
+  (datetime column plus Open/High/Low/Close/Volume, any column case).
+- **Dashboard:** "Add your own market data" panel on the overview screen.
+
+Rows are validated with the same rules as the offline pipeline (positive
+prices, OHLC geometry, NSE trading hours 09:15-15:30 IST, duplicate removal);
+dropped rows are reported back, never silently discarded.
+
+`GET /candles?symbol=...` returns the stored series for charting, and the
+Security Investigation screen renders it as a candlestick + volume chart.
+
+## 🔔 Alert Delivery
+
+High-severity alerts no longer live only on the dashboard. Set a webhook to
+get notified when sudden unusual activity is detected:
+
+```yaml
+# configs/settings.yaml
+notifications:
+  webhook_url: "https://your-endpoint.example/hook"   # or MARKETWATCH_NOTIFICATIONS__WEBHOOK_URL
+  min_severity: HIGH
+```
+
+Every newly created HIGH/CRITICAL alert is POSTed once as JSON (symbol,
+0-100 risk score, severity, explanation summary). Delivery failures are
+logged and never interrupt the surveillance pipeline.
+
+## ⚖️ Buying/Selling Pressure (Order-Imbalance Proxy)
+
+True order-book imbalance requires level-2 trade data, which OHLCV does not
+carry. As a documented proxy, the feature pipeline computes per-bar
+buying/selling pressure: `(close - open) / (high - low)`, in [-1, 1], where
++1 means the bar closed at its high (buying pressure) and -1 at its low.
+It feeds the Z-score, EWMA, and Isolation Forest detectors alongside price,
+volume, and volatility features.
+
+---
+
+## 🖥️ React Front End (`web/`)
+
+An animated React + TypeScript front end (Vite) now sits alongside the
+Streamlit dashboard and talks only to the FastAPI backend. Same detectors,
+same risk scores, same alerts — rendered with the MarketWatch AI command
+center UI (Command, Alerts, Alert detail, Markets, Your data, Settings).
+
+### Run it
+
+```bash
+# 1. sample data (one-off; skip if you have real curated data)
+python scripts/generate_sample_data.py
+
+# 2. backend (serves the API and, once built, the React app at /app)
+uvicorn marketwatch.api:create_app --factory --host 0.0.0.0 --port 8000
+
+# 3a. production: build the front end once, then open http://localhost:8000/app/
+cd web && npm install && npm run build
+
+# 3b. development: hot-reload dev server on http://localhost:5173/app/
+cd web && npm run dev
+```
+
+`POST /detect` runs the full-history detection pass (cached; ~20s for the
+12-symbol sample set, instant afterwards). `GET /scores` feeds the charts,
+`GET /alerts` + `PATCH /alerts/{id}` power the analyst queue
+(acknowledge / escalate / resolve / reopen with notes), and
+`GET`/`PUT /settings` persists tuning to `configs/settings.yaml` and
+re-scores server-side.
+
+### Front-end tests
+
+```bash
+cd web && npm test        # vitest
+npm run build             # type-check + production bundle
+```
+
+The classic Streamlit dashboard (`frontend/`) still works unchanged:
+
+```bash
+streamlit run frontend/app.py
+```
+
+---
+
+## 📡 Live Data + Trigger Rules & Guidance
+
+The app can poll **free live-ish market data** and turn your own thresholds
+into plain-English guidance:
+
+- **Source:** Yahoo Finance via `yfinance` - free, no API key. Free Yahoo data
+  is officially delayed, usually up to ~15 minutes for NSE (observed ~1-2
+  minutes in testing). True real-time NSE feeds are paid only (NSE Data &
+  Analytics, broker APIs like Zerodha Kite or Upstox).
+- **Polling:** `POST /live/start` (default every 5 min), `POST /live/stop`,
+  `POST /live/poll` for a single cycle, `GET /live/status` for source, delay
+  note and last-poll summary. New bars are appended to the curated Parquet
+  store and streamed through the real detection pipeline (Z-score, EWMA,
+  walk-forward Isolation Forest), so live bars raise normal alerts.
+- **Trigger rules:** `GET/POST/DELETE /rules` (persisted to
+  `configs/rules.yaml`). Metrics: price above/below, % jump/drop in one bar,
+  volume spike (x average), fused risk, Z-score, buy/sell pressure. `*` matches
+  every symbol.
+- **Guidance:** `GET /guidance` returns fired rules with the metric evidence
+  (price, % move, volume ratio, fused risk, Z-score, pressure) and a
+  plain-English suggestion. Guidance is statistical decision support - **not
+  financial advice** - and no trades are ever placed.
+
+In the UI: the Settings screen has a "Live market data" card (start/stop/poll
+once, with the delay stated honestly) and a "Trigger rules" editor; fired
+guidance shows up on the Command screen.

@@ -29,3 +29,10 @@ data/curated/
 *.swp
 .DS_Store
 Thumbs.db
+
+# Agent/dev tooling - not product code
+.agent/
+.planning/
+
+# Live polling runtime state
+data/guidance.jsonl

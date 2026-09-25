@@ -28,6 +28,7 @@ class FeatureSet(BaseModel):
     parkinson_volatility: float = Field(ge=0.0)
     market_excess_return: float
     sector_excess_return: float
+    buy_sell_pressure: float = 0.0
     raw_features: dict[str, float] = Field(default_factory=dict)
 
     @field_validator("timestamp")
@@ -47,6 +48,7 @@ class FeatureSet(BaseModel):
             ("parkinson_volatility", self.parkinson_volatility),
             ("market_excess_return", self.market_excess_return),
             ("sector_excess_return", self.sector_excess_return),
+            ("buy_sell_pressure", self.buy_sell_pressure),
         ]:
             if not math.isfinite(val):
                 raise ValueError(f"Feature '{name}' must be finite, got {val}")
